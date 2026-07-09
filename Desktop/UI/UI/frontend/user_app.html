@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NovaJoy · 取货 Web 占位</title>
+  <style>
+    :root {
+      --nvj-bg: #081A2F;
+      --nvj-bg-secondary: #102844;
+      --nvj-card: #122D4A;
+      --nvj-accent: #00D4FF;
+      --nvj-text: #FFFFFF;
+      --nvj-text-muted: #A7C0D8;
+      --nvj-border: rgba(0, 212, 255, 0.15);
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: "Segoe UI", "Noto Sans SC", system-ui, sans-serif;
+      margin: 0;
+      min-height: 100vh;
+      background: linear-gradient(165deg, var(--nvj-bg) 0%, #0a2238 55%, var(--nvj-bg-secondary) 100%);
+      color: var(--nvj-text);
+      padding: 1.5rem 1rem 2rem;
+    }
+    .wrap { max-width: 560px; margin: 0 auto; }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem 1.1rem;
+      margin-bottom: 1.25rem;
+      background: rgba(18, 45, 74, 0.72);
+      border: 1px solid var(--nvj-border);
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0, 212, 255, 0.08);
+    }
+    .brand img {
+      width: 72px;
+      height: 72px;
+      object-fit: contain;
+      flex-shrink: 0;
+    }
+    .brand-copy h1 {
+      margin: 0;
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+    .brand-copy p {
+      margin: 0.35rem 0 0;
+      font-size: 0.82rem;
+      color: var(--nvj-text-muted);
+    }
+    .card {
+      background: rgba(18, 45, 74, 0.65);
+      border: 1px solid var(--nvj-border);
+      border-radius: 12px;
+      padding: 1.1rem 1.2rem;
+      margin-bottom: 1rem;
+    }
+    .card h2 {
+      margin: 0 0 0.75rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--nvj-accent);
+    }
+    p { line-height: 1.55; color: var(--nvj-text-muted); margin: 0 0 0.75rem; }
+    code {
+      background: rgba(0, 212, 255, 0.1);
+      color: var(--nvj-accent);
+      padding: 0.12rem 0.35rem;
+      border-radius: 4px;
+      font-size: 0.88em;
+    }
+    pre {
+      margin: 0;
+      padding: 0.85rem;
+      background: rgba(8, 26, 47, 0.85);
+      border: 1px solid var(--nvj-border);
+      border-radius: 8px;
+      color: var(--nvj-text-muted);
+      font-size: 0.82rem;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="brand">
+      <img src="../assets/branding/novajoy_icon_96.png" alt="NovaJoy" width="96" height="96" />
+      <div class="brand-copy">
+        <h1>NovaJoy</h1>
+        <p>Smart Building Robotics · 取货 Web 扩展位</p>
+      </div>
+    </header>
+    <section class="card">
+      <h2>使用说明</h2>
+      <p>主用户端请使用 <code>python -m user_client.main</code>（Kivy）。本页仅保留轻量 HTML/JS 扩展位。</p>
+      <p>API 根路径示例：<code id="base"></code></p>
+    </section>
+    <section class="card">
+      <h2>健康检查</h2>
+      <pre id="out">加载中…</pre>
+    </section>
+  </div>
+  <script src="user_app.js"></script>
+</body>
+</html>

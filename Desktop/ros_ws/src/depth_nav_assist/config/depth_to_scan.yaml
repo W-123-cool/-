@@ -1,0 +1,8 @@
+# depthimage_to_laserscan — 将深度图转为 2D 激光，补全近处低矮障碍
+depthimage_to_laserscan:
+  ros__parameters:
+    scan_time: 0.033
+    range_min: 0.35
+    range_max: 2.0
+    scan_height: 0.15
+    output_frame_id: camera_depth_optical_frame

@@ -1,0 +1,7 @@
+{
+  "first_mode": "guard",
+  "patrol_rounds": 1,
+  "guard_between_min": 5,
+  "guard_yaw": 0.134,
+  "plan_dir": ""
+}

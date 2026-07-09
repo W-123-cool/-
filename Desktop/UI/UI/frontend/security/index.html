@@ -1,0 +1,1386 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>NovaJoy 保安总控</title>
+  <style>
+    :root {
+      --accent: #00d4ff;
+      --accent-dim: rgba(0, 212, 255, 0.18);
+      --danger: #ff6b6b;
+      --ok: #2ecc71;
+      --muted: #a7c0d8;
+      --glass: rgba(8, 26, 47, 0.78);
+      --glass-border: rgba(0, 212, 255, 0.22);
+      --top-h: 72px;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "Noto Sans SC", "Microsoft YaHei", system-ui, sans-serif;
+      color: #e8f4ff;
+      background: #061220 url("/ui-assets/b.png") center center / cover no-repeat fixed;
+    }
+    .login-screen {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .login-card {
+      width: min(420px, 100%);
+      background: var(--glass);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      padding: 28px 24px;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+    }
+    .login-brand { display: block; width: min(220px, 80%); margin: 0 auto 16px; }
+    .app-shell { min-height: 100vh; display: flex; flex-direction: column; }
+    .top-bar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px 16px;
+      padding: 10px 16px;
+      background: rgba(6, 18, 32, 0.92);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--glass-border);
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+    }
+    .brand-icon { width: 44px; height: 44px; object-fit: contain; flex-shrink: 0; }
+    .top-title { flex: 1; min-width: 200px; }
+    .top-title h1 { font-size: 1.2rem; margin: 0 0 4px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .top-alerts { font-size: 13px; color: var(--muted); white-space: nowrap; }
+    .main-grid {
+      flex: 1;
+      display: grid;
+      grid-template-columns: minmax(300px, 400px) 1fr;
+      gap: 12px;
+      padding: 12px 16px 16px;
+      max-width: 1680px;
+      margin: 0 auto;
+      width: 100%;
+      align-items: start;
+    }
+    .sidebar {
+      max-height: calc(100vh - var(--top-h) - 24px);
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+    .sidebar::-webkit-scrollbar { width: 6px; }
+    .sidebar::-webkit-scrollbar-thumb { background: var(--accent-dim); border-radius: 3px; }
+    .vision-sticky {
+      position: sticky;
+      top: calc(var(--top-h) + 8px);
+      max-height: calc(100vh - var(--top-h) - 20px);
+      min-height: calc(100vh - var(--top-h) - 20px);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      overflow-y: auto;
+    }
+    .vision-panel {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 10px;
+      flex: 1 1 auto;
+      min-height: min(560px, calc(100vh - var(--top-h) - 200px));
+    }
+    h1 { font-size: 1.35rem; margin: 0 0 8px; }
+    h3 { margin: 0 0 8px; font-size: 0.95rem; color: var(--accent); }
+    .card {
+      background: var(--glass);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 10px;
+    }
+    .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 8px 0; }
+    button {
+      border: 1px solid var(--glass-border);
+      border-radius: 8px;
+      padding: 9px 14px;
+      cursor: pointer;
+      font-weight: 600;
+      background: rgba(0, 212, 255, 0.12);
+      color: #fff;
+      transition: background 0.15s, transform 0.1s;
+    }
+    button:hover { background: rgba(0, 212, 255, 0.22); }
+    button:active { transform: scale(0.98); }
+    .btn { background: rgba(0, 212, 255, 0.32); border-color: rgba(0, 212, 255, 0.45); color: #fff; }
+    .btn-danger { background: rgba(231, 76, 60, 0.75); border-color: rgba(231, 76, 60, 0.6); color: #fff; }
+    .btn-ghost { background: rgba(255, 255, 255, 0.06); color: #fff; }
+    input, select {
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--glass-border);
+      background: rgba(0, 0, 0, 0.35);
+      color: #fff;
+    }
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      background: rgba(255, 255, 255, 0.1);
+    }
+    .badge.on { background: rgba(46, 204, 113, 0.35); color: #b8f5d0; border: 1px solid rgba(46, 204, 113, 0.5); }
+    .badge.off { background: rgba(120, 120, 120, 0.35); color: #ccc; }
+    .hint { color: var(--muted); font-size: 12px; line-height: 1.45; }
+    pre {
+      background: rgba(0, 0, 0, 0.4);
+      padding: 10px;
+      border-radius: 8px;
+      overflow: auto;
+      font-size: 11px;
+      max-height: 160px;
+      border: 1px solid var(--glass-border);
+      margin: 0;
+    }
+    .mapBox { position: relative; max-width: 100%; overflow: auto; background: #000; border-radius: 8px; min-height: 160px; }
+    .mapBox img { max-width: 100%; display: block; }
+    #mapCanvas { position: absolute; left: 0; top: 0; pointer-events: none; }
+    #planInfo { font-size: 12px; color: var(--muted); }
+    .alertGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 6px; max-height: 140px; overflow-y: auto; }
+    .alertItem { background: rgba(0, 0, 0, 0.45); border-radius: 8px; overflow: hidden; cursor: pointer; border: 2px solid transparent; position: relative; }
+    .alertDel { position: absolute; top: 3px; right: 3px; z-index: 2; background: rgba(0, 0, 0, 0.7); color: #fff; border: none; border-radius: 4px; padding: 1px 5px; font-size: 10px; cursor: pointer; }
+    .alertDel:hover { background: #c0392b; }
+    .alertItem img { width: 100%; display: block; aspect-ratio: 4/3; object-fit: cover; }
+    .alertItem.new { border-color: var(--danger); }
+    .alertMeta { font-size: 10px; padding: 3px 5px; color: var(--muted); }
+    .alertItem.selected { border-color: var(--accent); }
+    .liveBox, .previewBox {
+      background: #000;
+      border-radius: 10px;
+      overflow: hidden;
+      min-height: 280px;
+      height: 100%;
+      position: relative;
+      border: 1px solid var(--glass-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .liveBox img.video,
+    .previewBox img {
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
+      height: auto;
+      display: block;
+      object-fit: contain;
+      background: #000;
+    }
+    .previewBox { cursor: pointer; }
+    .previewBox img:not([src]),
+    .previewBox img[src=""] { display: none; }
+    .previewEmpty {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+      pointer-events: none;
+    }
+    .previewBox.has-image .previewEmpty { display: none; }
+    .liveLabel {
+      position: absolute;
+      left: 8px;
+      top: 8px;
+      background: rgba(0, 0, 0, 0.65);
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      z-index: 2;
+    }
+    .previewZoomBtn {
+      position: absolute;
+      right: 8px;
+      top: 8px;
+      z-index: 3;
+      padding: 5px 12px;
+      font-size: 11px;
+      border-radius: 6px;
+    }
+    .previewZoomBtn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+    .lightbox {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .lightbox[hidden] { display: none !important; }
+    .lightbox-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.88);
+      cursor: pointer;
+    }
+    .lightbox-body {
+      position: relative;
+      z-index: 1;
+      max-width: min(96vw, 1280px);
+      max-height: 92vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+    .lightbox-body img {
+      max-width: 100%;
+      max-height: calc(92vh - 56px);
+      object-fit: contain;
+      border-radius: 8px;
+      box-shadow: 0 12px 48px rgba(0, 0, 0, 0.55);
+      background: #000;
+    }
+    .lightbox-close {
+      position: absolute;
+      top: -40px;
+      right: 0;
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      border-radius: 50%;
+      font-size: 20px;
+      line-height: 1;
+      background: rgba(255, 255, 255, 0.12);
+    }
+    .lightbox-meta {
+      margin: 0;
+      font-size: 13px;
+      color: var(--muted);
+      text-align: center;
+    }
+    .alertSection h4 { margin: 6px 0 4px; font-size: 12px; color: var(--muted); font-weight: 600; }
+    details.status-fold > summary { cursor: pointer; color: var(--accent); font-size: 13px; font-weight: 600; user-select: none; }
+    details.status-fold { margin-top: 4px; }
+    @media (max-width: 960px) {
+      .main-grid { grid-template-columns: 1fr; }
+      .sidebar { max-height: none; overflow: visible; }
+      .vision-sticky { position: static; max-height: none; min-height: auto; }
+      .vision-panel { grid-template-columns: 1fr; min-height: auto; }
+      .liveBox, .previewBox { min-height: 240px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="loginBox" class="login-screen">
+    <div class="login-card">
+      <img class="login-brand" src="/ui-assets/%E6%9C%89%E5%AD%97%E5%9B%BE%E6%A0%87.png" alt="NovaJoy"/>
+      <h1 style="text-align:center;margin-bottom:4px">保安总控登录</h1>
+      <p class="hint" style="text-align:center">PIN 默认 1234（环境变量 SECURITY_OPERATOR_PIN）</p>
+      <div class="row" style="justify-content:center;margin-top:16px">
+        <input id="pin" type="password" placeholder="操作员 PIN" value="1234"/>
+        <button class="btn" onclick="doLogin()">登录</button>
+      </div>
+      <p id="loginMsg" class="hint" style="text-align:center;margin-top:8px"></p>
+    </div>
+  </div>
+
+  <div id="mainUI" class="app-shell" style="display:none">
+    <header class="top-bar">
+      <img class="brand-icon" src="/ui-assets/%E6%97%A0%E5%AD%97%E5%9B%BE%E6%A0%87.png" alt="NVJ"/>
+      <div class="top-title">
+        <h1>保安总控 <span id="modeBadge" class="badge off">OFF</span></h1>
+        <p id="statusLine" class="hint" style="margin:0">—</p>
+      </div>
+      <div class="top-alerts" id="alertSummary">—</div>
+    </header>
+
+    <div class="main-grid">
+      <aside class="sidebar">
+        <div class="card">
+          <h3>巡逻模式</h3>
+          <div class="row">
+            <label>首次模式
+              <select id="firstMode">
+                <option value="guard">驻守</option>
+                <option value="patrol">巡逻</option>
+              </select>
+            </label>
+            <label>轮次 n <input id="rounds" type="number" min="0" value="1" style="width:60px"/></label>
+            <label>驻守 x 分 <input id="guardMin" type="number" min="0" value="5" style="width:60px"/></label>
+          </div>
+          <div class="row">
+            <button class="btn" onclick="enterPatrol()">进入巡逻</button>
+            <button class="btn-danger" onclick="exitPatrol()">退出巡逻</button>
+            <button class="btn-ghost" onclick="mockAtHome()">Mock 起点</button>
+          </div>
+        </div>
+
+        <div class="card" id="guardControlCard">
+          <h3>驻守控向</h3>
+          <div class="row">
+            <label>角度 <input id="guardDeltaDeg" type="number" step="1" value="30" style="width:70px"/></label>
+            <button class="btn-ghost" onclick="guardRotate(-15)">←15°</button>
+            <button class="btn" onclick="guardRotateFromInput()">转向</button>
+            <button class="btn-ghost" onclick="guardRotate(15)">15°→</button>
+            <button class="btn-ghost" onclick="guardRotateCancel()">取消</button>
+          </div>
+          <p id="guardControlHint" class="hint">—</p>
+        </div>
+
+        <div class="card">
+          <h3>巡逻计划（P1b）</h3>
+          <div class="row">
+            <select id="planSelect" style="min-width:100%;flex:1"></select>
+          </div>
+          <div class="row">
+            <button class="btn-ghost" onclick="selectPlan()">启用计划</button>
+            <button class="btn-ghost" onclick="loadPlans()">刷新列表</button>
+          </div>
+          <p id="planInfo" class="hint">—</p>
+          <div class="mapBox" id="mapBox" style="display:none">
+            <img id="mapImg" alt="patrol overlay"/>
+            <canvas id="mapCanvas"></canvas>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>识人与追人</h3>
+          <div class="row">
+            <label><input id="guardViewTrackEnabled" type="checkbox" checked onchange="saveVisionToggles()"/> 驻守视角跟人</label>
+            <label><input id="patrolTrackEnabled" type="checkbox" checked onchange="saveVisionToggles()"/> 巡逻 Nav2 追人</label>
+          </div>
+          <p class="hint">关闭后全程（含驻守/巡逻）不叠框、不截图、不提示音。进入巡逻时会自动同步车端；若仍异常请重启 patrol_vision_node 后再点一次开关。</p>
+          <div class="row">
+            <label>识别置信度
+              <input id="detectionConf" type="number" min="0.05" max="0.95" step="0.05" value="0.30" style="width:72px"/>
+            </label>
+            <button class="btn-ghost" onclick="applyVisionConf()">修改识别精度</button>
+          </div>
+          <p id="visionSettingsHint" class="hint">置信度仅在点击按钮时下发车端一次，避免频繁刷新影响性能。</p>
+        </div>
+
+        <div class="card">
+          <h3>排班</h3>
+          <div class="row">
+            <label><input id="schedEnabled" type="checkbox"/> 启用 night_security</label>
+            <label>始 <input id="schedStart" value="22:00" style="width:68px"/></label>
+            <label>终 <input id="schedEnd" value="06:00" style="width:68px"/></label>
+            <select id="schedMode">
+              <option value="patrol">巡逻</option>
+              <option value="guard">驻守</option>
+            </select>
+            <button class="btn-ghost" onclick="saveSchedules()">保存</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>相机与告警</h3>
+          <div class="row">
+            <label><input type="radio" name="streamMode" id="streamModeDirect" value="direct" checked onchange="onStreamModeChange()"/> 直连</label>
+            <label><input type="radio" name="streamMode" id="streamModeProxy" value="proxy" onchange="onStreamModeChange()"/> PC 代理</label>
+          </div>
+          <div class="row">
+            <input id="cameraStreamUrl" type="text" placeholder="http://10.1.24.19:8089/stream" style="flex:1;min-width:180px"/>
+          </div>
+          <div class="row">
+            <button class="btn-ghost" onclick="connectCameraStream()">连接画面</button>
+            <button class="btn-ghost" onclick="syncCameraFromVehicle()">同步车端</button>
+            <button class="btn-ghost" onclick="clearCameraStreamUrl()">清除</button>
+          </div>
+          <div class="row">
+            <label><input id="alertSound" type="checkbox" checked/> 提示音</label>
+            <button class="btn-ghost" onclick="markAlertsRead()">已读</button>
+            <button class="btn-ghost" onclick="loadAlerts()">刷新</button>
+            <button class="btn-ghost" onclick="deleteAllAlerts()">删全部</button>
+            <button class="btn-ghost" onclick="mockPersonEvent()">Mock 识人</button>
+          </div>
+          <p id="streamHint" class="hint">与 person_tracker 相同：img 刷新显示带框画面</p>
+        </div>
+      </aside>
+
+      <section class="vision-sticky">
+        <div class="vision-panel">
+          <div class="liveBox">
+            <span class="liveLabel">实时画面（带检测框）</span>
+            <img id="liveCam" class="video" alt="等待相机流…"/>
+          </div>
+          <div class="previewBox" id="alertPreviewBox" title="点击查看大图">
+            <span class="liveLabel">告警大图</span>
+            <button type="button" class="previewZoomBtn btn-ghost" id="alertZoomBtn" disabled onclick="event.stopPropagation(); openAlertLightbox()">查看大图</button>
+            <img id="alertPreview" alt="告警抓拍预览"/>
+            <div class="previewEmpty" id="alertPreviewEmpty">点击下方抓拍记录选择告警<br/>选中后可点此区域或「查看大图」</div>
+          </div>
+        </div>
+        <div class="alertSection">
+          <h4>告警抓拍记录</h4>
+          <div id="alertGrid" class="alertGrid"></div>
+        </div>
+        <p class="hint" style="margin:0">
+          <a id="streamOpenTab" href="#" target="_blank" rel="noopener" style="color:var(--muted)">新窗口打开 MJPEG</a>
+          · 车端需运行 patrol_vision_node
+        </p>
+        <details class="status-fold card" style="padding:10px 14px;margin:0">
+          <summary>详细状态 JSON</summary>
+          <pre id="statusJson" style="margin-top:8px">—</pre>
+        </details>
+      </section>
+    </div>
+  </div>
+
+  <div id="alertLightbox" class="lightbox" hidden>
+    <div class="lightbox-backdrop" onclick="closeAlertLightbox()"></div>
+    <div class="lightbox-body">
+      <button type="button" class="lightbox-close btn-ghost" onclick="closeAlertLightbox()" aria-label="关闭">×</button>
+      <img id="alertLightboxImg" alt="告警大图"/>
+      <p id="alertLightboxMeta" class="lightbox-meta"></p>
+    </div>
+  </div>
+<script>
+let token = localStorage.getItem('security_token') || '';
+let lastAlertUnread = 0;
+let lastAlertTotal = 0;
+let alertAudioCtx = null;
+
+function unlockAlertAudio() {
+  try {
+    if (!alertAudioCtx) {
+      alertAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (alertAudioCtx.state === 'suspended') {
+      alertAudioCtx.resume();
+    }
+  } catch (e) {}
+}
+
+function playAlertSound() {
+  if (!document.getElementById('alertSound')?.checked) return;
+  try {
+    unlockAlertAudio();
+    const ctx = alertAudioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.frequency.value = 880;
+    gain.gain.value = 0.15;
+    osc.start();
+    osc.stop(ctx.currentTime + 0.15);
+    setTimeout(() => {
+      const osc2 = ctx.createOscillator();
+      const gain2 = ctx.createGain();
+      osc2.connect(gain2);
+      gain2.connect(ctx.destination);
+      osc2.frequency.value = 660;
+      gain2.gain.value = 0.15;
+      osc2.start();
+      osc2.stop(ctx.currentTime + 0.2);
+    }, 180);
+  } catch (e) {
+    try {
+      new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIGWi77+efTRAMUKfj8LZjHAY4kdfyzHksBSR3x/DdkEAKFF606euoVRQKRp/g8r5sIQUrgc7y2Yk2CBlou+/nn00QDFCn4/C2YxwGOJHX8sx5LAUkd8fw3ZBACg==').play();
+    } catch (e2) {}
+  }
+}
+let lastStatus = null;
+let selectedAlertId = '';
+let selectedAlertData = null;
+let streamConnectedUrl = '';
+let streamAutoConnected = false;
+let cameraUrlManual = false;
+let framePollTimer = null;
+let framePollTimeout = null;
+
+const STREAM_MODE_KEY = 'patrol_camera_stream_mode';
+
+function getStreamMode() {
+  return localStorage.getItem(STREAM_MODE_KEY) || 'direct';
+}
+
+function setStreamMode(mode) {
+  localStorage.setItem(STREAM_MODE_KEY, mode === 'proxy' ? 'proxy' : 'direct');
+  const direct = document.getElementById('streamModeDirect');
+  const proxy = document.getElementById('streamModeProxy');
+  if (direct) direct.checked = mode !== 'proxy';
+  if (proxy) proxy.checked = mode === 'proxy';
+}
+
+function syncStreamModeRadios() {
+  setStreamMode(getStreamMode());
+}
+
+function onStreamModeChange() {
+  const mode = document.getElementById('streamModeProxy').checked ? 'proxy' : 'direct';
+  setStreamMode(mode);
+  streamAutoConnected = false;
+  streamConnectedUrl = '';
+  if (lastStatus) {
+    const u = resolveStreamUrl(lastStatus, mode);
+    if (u) {
+      document.getElementById('cameraStreamUrl').value = u;
+      applyCameraStream(u, { force: true });
+    }
+  }
+}
+
+function directStreamFromStatus(j) {
+  if (!j) return '';
+  const candidates = [
+    j.camera_stream_mqtt_url,
+    j.camera_stream_direct_url,
+    j.camera_stream_upstream,
+    j.camera_stream_url,
+  ];
+  for (const s of candidates) {
+    const u = (s || '').trim();
+    if (u.startsWith('http') && u.includes('/stream')) return u;
+  }
+  const mqtt = j.robot && j.robot.mqtt;
+  if (mqtt && mqtt.camera_stream_url) {
+    const u = String(mqtt.camera_stream_url).trim();
+    if (u.startsWith('http')) return u;
+  }
+  return '';
+}
+
+function proxyStreamUrl() {
+  return token ? '/api/security/camera/stream?token=' + encodeURIComponent(token) : '';
+}
+
+function resolveStreamUrl(j, mode) {
+  mode = mode || getStreamMode();
+  if (mode === 'direct') {
+    const direct = directStreamFromStatus(j);
+    if (direct) return direct;
+  }
+  return proxyStreamUrl();
+}
+
+function isMjpegStreamUrl(u) {
+  return /\/stream(\/?|\?|$)/.test(u) || u.includes('/api/security/camera/stream');
+}
+
+function stopFramePoll() {
+  if (framePollTimer) {
+    clearInterval(framePollTimer);
+    framePollTimer = null;
+  }
+  if (framePollTimeout) {
+    clearTimeout(framePollTimeout);
+    framePollTimeout = null;
+  }
+}
+
+function streamBaseFromInput(u) {
+  u = (u || '').trim();
+  if (!u) return '';
+  if (u.includes('/api/security/camera/stream')) return u;
+  if (u.includes('/api/security/camera/frame')) {
+    return u.replace('/api/security/camera/frame', '/api/security/camera/stream');
+  }
+  return u.replace(/\/frame\.jpg(\?.*)?$/i, '/stream');
+}
+
+function directFrameUrlFromStream(streamUrl) {
+  const base = (streamUrl || '').trim();
+  if (!base) return '';
+  if (base.includes('/api/security/camera/stream')) {
+    const q = base.includes('?') ? base.slice(base.indexOf('?')) : '';
+    return '/api/security/camera/frame' + q;
+  }
+  if (/\/frame(\.jpg)?(\?|$)/i.test(base)) {
+    return base.split('?')[0].replace(/\/frame\/?$/i, '/frame.jpg');
+  }
+  try {
+    const u = new URL(base);
+    if (/\/stream\/?$/i.test(u.pathname)) {
+      u.pathname = u.pathname.replace(/\/stream\/?$/i, '/frame.jpg');
+    } else if (!/\/frame\.jpg$/i.test(u.pathname)) {
+      u.pathname = u.pathname.replace(/\/$/, '') + '/frame.jpg';
+    }
+    u.search = '';
+    return u.href;
+  } catch (e) {
+    if (/^https?:\/\//i.test(base)) {
+      if (/\/stream/i.test(base)) {
+        return base.replace(/\/stream\/?(\?.*)?$/i, '/frame.jpg');
+      }
+      return base.replace(/\/$/, '') + '/frame.jpg';
+    }
+  }
+  return '';
+}
+
+
+function stopMjpegImg() {
+  const img = document.getElementById('liveCam');
+  if (img) img.removeAttribute('src');
+}
+
+function loadCameraUrlPref() {
+  syncStreamModeRadios();
+  const inp = document.getElementById('cameraStreamUrl');
+  if (!inp) return;
+  if (getStreamMode() === 'proxy' && token) {
+    inp.value = proxyStreamUrl();
+    return;
+  }
+  // 直连模式：优先等 syncCameraFromStatus 用车端 MQTT 地址；无上报再用缓存
+  const saved = localStorage.getItem('patrol_camera_stream_url') || '';
+  if (saved && !inp.value) inp.value = saved;
+}
+
+function startDirectMjpeg(streamUrl, label) {
+  stopFramePoll();
+  stopMjpegImg();
+  const img = document.getElementById('liveCam');
+  const hint = document.getElementById('streamHint');
+  const u = streamBaseFromInput(streamUrl);
+  if (!u) return false;
+  let fails = 0;
+  img.onload = () => {
+    fails = 0;
+    streamConnectedUrl = streamUrl;
+    if (hint) hint.textContent = (label || '直连') + ' MJPEG 已连接（同地址栏 /stream）';
+  };
+  img.onerror = () => {
+    fails += 1;
+    if (fails >= 2) {
+      if (hint) hint.textContent = 'MJPEG img 不可用，改用 frame.jpg 单帧刷新…';
+      startFramePoll(streamUrl, label || '直连');
+    }
+  };
+  img.src = u;
+  return true;
+}
+
+function startFramePoll(pollBaseUrl, label, explicitFrameUrl) {
+  stopFramePoll();
+  stopMjpegImg();
+  const img = document.getElementById('liveCam');
+  const hint = document.getElementById('streamHint');
+  let frameUrl = explicitFrameUrl || directFrameUrlFromStream(pollBaseUrl);
+  if (!frameUrl) {
+    if (hint) {
+      hint.textContent = '无法解析 frame.jpg：请填 http://10.1.24.7:8089/stream 后点连接（当前 ' + (pollBaseUrl || '空') + '）';
+    }
+    return;
+  }
+  let fails = 0;
+  let inflight = false;
+
+  const schedule = (ms) => {
+    if (framePollTimeout) clearTimeout(framePollTimeout);
+    framePollTimeout = setTimeout(tick, ms);
+  };
+
+  const tick = () => {
+    if (inflight) return;
+    inflight = true;
+    img.src = frameUrl + (frameUrl.includes('?') ? '&' : '?') + '_=' + Date.now();
+  };
+
+  img.onerror = () => {
+    inflight = false;
+    fails += 1;
+    if (fails >= 12) {
+      streamConnectedUrl = '';
+      if (hint) {
+        hint.textContent = '画面拉取失败：请在浏览器打开 ' + frameUrl +
+          ' ；/stream 能开但此处失败多为 img 轮询过快，已自动降速仍失败则查网络';
+      }
+      return;
+    }
+    schedule(Math.min(500, 120 + fails * 40));
+  };
+  img.onload = () => {
+    inflight = false;
+    fails = 0;
+    streamConnectedUrl = pollBaseUrl;
+    if (hint) hint.textContent = (label || '实时') + ' 已连接（frame.jpg 单帧刷新）';
+    schedule(80);
+  };
+  tick();
+}
+
+function startProxyMjpeg() {
+  stopFramePoll();
+  const img = document.getElementById('liveCam');
+  const hint = document.getElementById('streamHint');
+  const u = proxyStreamUrl();
+  if (!u) return;
+  img.onerror = () => {
+    if (hint) hint.textContent = '代理 MJPEG 失败，改用单帧刷新…';
+    startProxyFramePoll();
+  };
+  img.onload = () => {
+    streamConnectedUrl = u;
+    if (hint) hint.textContent = 'PC 代理 MJPEG 已连接（同源 img，同 person_tracker /video_feed）';
+  };
+  img.src = u;
+}
+
+function startProxyFramePoll() {
+  if (!token) return;
+  const framePath = '/api/security/camera/frame?token=' + encodeURIComponent(token);
+  startFramePoll(proxyStreamUrl(), 'PC 代理', framePath);
+}
+
+function connectCameraStream() {
+  cameraUrlManual = true;
+  applyCameraStream(null, { force: true, manual: true });
+}
+
+function syncCameraFromVehicle() {
+  if (!lastStatus) {
+    alert('请等待状态加载…');
+    return;
+  }
+  const u = directStreamFromStatus(lastStatus);
+  if (!u) {
+    alert('车端尚未上报 camera_stream_url（确认 patrol_vision_node 与 MQTT 在线）');
+    return;
+  }
+  cameraUrlManual = false;
+  streamAutoConnected = false;
+  streamConnectedUrl = '';
+  stopFramePoll();
+  stopMjpegImg();
+  document.getElementById('cameraStreamUrl').value = u;
+  applyCameraStream(u, { force: true });
+  streamAutoConnected = true;
+}
+
+function bindCameraUrlInput() {
+  const inp = document.getElementById('cameraStreamUrl');
+  if (!inp || inp.dataset.bound) return;
+  inp.dataset.bound = '1';
+  inp.addEventListener('input', () => { cameraUrlManual = true; });
+}
+
+function applyCameraStream(url, opts) {
+  opts = opts || {};
+  const inpVal = (document.getElementById('cameraStreamUrl').value || '').trim();
+  let u = (url || inpVal || '').trim();
+  // 直连模式：始终以输入框里的 http 地址为准（避免 sync 传入 PC 代理路径导致 frame.jpg 解析失败）
+  if (getStreamMode() === 'direct' && /^https?:\/\//i.test(inpVal)) {
+    u = inpVal;
+  }
+  const hint = document.getElementById('streamHint');
+  const openTab = document.getElementById('streamOpenTab');
+  if (!u || u.includes('<') || u.includes('RockPi_IP') || u.includes('车IP')) {
+    stopFramePoll();
+    stopMjpegImg();
+    streamConnectedUrl = '';
+    if (hint) hint.textContent = '请填写真实 URL，例如 http://10.1.24.7:8089/stream';
+    return;
+  }
+  if (!opts.force && streamConnectedUrl === u) return;
+
+  if (opts.manual) cameraUrlManual = true;
+  localStorage.setItem('patrol_camera_stream_url', u);
+  if (!opts.keepInput) document.getElementById('cameraStreamUrl').value = u;
+  const streamForTab = streamBaseFromInput(u);
+  if (openTab && streamForTab.startsWith('http')) {
+    openTab.href = streamForTab;
+  }
+
+  const mode = getStreamMode();
+  if (mode === 'proxy') {
+    if (_vehicleHasUpstream(lastStatus)) {
+      startProxyMjpeg();
+    } else {
+      startProxyFramePoll();
+    }
+    return;
+  }
+
+  // 直连：优先 MJPEG（与地址栏 /stream 相同）；失败再 frame.jpg 顺序轮询
+  if (/^https?:\/\//i.test(u) && u.includes('/stream')) {
+    startDirectMjpeg(u, '直连');
+  } else {
+    startFramePoll(u, '直连');
+  }
+}
+
+function _vehicleHasUpstream(j) {
+  return !!(j && (j.camera_stream_upstream || directStreamFromStatus(j)));
+}
+
+function clearCameraStreamUrl() {
+  localStorage.removeItem('patrol_camera_stream_url');
+  document.getElementById('cameraStreamUrl').value = '';
+  stopFramePoll();
+  stopMjpegImg();
+  streamConnectedUrl = '';
+  streamAutoConnected = false;
+  cameraUrlManual = false;
+  document.getElementById('streamHint').textContent = '已清除；点「同步车端地址」或填 http://车IP:8089/stream 后连接';
+}
+
+function syncCameraFromStatus(j) {
+  if (!j) return;
+  lastStatus = j;
+  const reported = directStreamFromStatus(j);
+  const inp = document.getElementById('cameraStreamUrl');
+  const cur = (inp && inp.value || '').trim();
+  const hint = document.getElementById('streamHint');
+
+  if (streamConnectedUrl && framePollTimer) return;
+
+  if (reported && cur && reported !== cur && !streamConnectedUrl && hint) {
+    hint.textContent = '连接失败？车端当前 ' + reported + ' — 点「同步车端地址」或手动改 IP 后连接';
+  }
+
+  if (streamAutoConnected) return;
+
+  const mode = getStreamMode();
+  const saved = (localStorage.getItem('patrol_camera_stream_url') || '').trim();
+  let target = '';
+  if (mode === 'direct') {
+    if (cameraUrlManual && saved) {
+      target = saved;
+    } else if (reported) {
+      target = reported;
+    } else if (saved) {
+      target = saved;
+    }
+  }
+  if (!target) target = resolveStreamUrl(j, mode);
+  if (!target) return;
+
+  if (inp && !cameraUrlManual) inp.value = target;
+  applyCameraStream(target, { force: true, keepInput: cameraUrlManual && !!cur });
+  streamAutoConnected = true;
+}
+
+function authHeaders() {
+  return token ? { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' };
+}
+
+async function doLogin() {
+  const pin = document.getElementById('pin').value;
+  const r = await fetch('/api/security/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ pin }) });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) {
+    document.getElementById('loginMsg').textContent = j.detail || '登录失败';
+    return;
+  }
+  token = j.token;
+  localStorage.setItem('security_token', token);
+  unlockAlertAudio();
+  document.getElementById('loginBox').style.display = 'none';
+  document.getElementById('mainUI').style.display = 'block';
+  loadSchedules();
+  loadPlans();
+  loadAlerts();
+  loadVisionSettings();
+  loadCameraUrlPref();
+  bindCameraUrlInput();
+  bindAlertPreviewInteractions();
+  syncStreamModeRadios();
+  refreshStatus().then(() => {
+    if (!streamAutoConnected && lastStatus) {
+      syncCameraFromStatus(lastStatus);
+    }
+  });
+  setInterval(refreshStatus, 2000);
+}
+
+async function refreshStatus() {
+  const r = await fetch('/api/security/status');
+  const j = await r.json();
+  const on = j.security_active === true;
+  const badge = document.getElementById('modeBadge');
+  badge.textContent = on ? (j.sub_state || 'ON').toUpperCase() : 'OFF';
+  badge.className = 'badge ' + (on ? 'on' : 'off');
+  const gp = j.guard_phase || '';
+  document.getElementById('statusLine').textContent =
+    (j.message || '') + (j.mock_vehicle ? ' · mock 车端' : '') +
+    (j.schedule_window_active ? ' · 排班窗口内' : '') +
+    (gp ? ` · guard:${gp}` : '') +
+    (j.patrol_route && j.patrol_route.active ? ` · 路线 ${j.patrol_route.route_pos}/${j.patrol_route.route_len}` : '');
+  syncGuardControl(j);
+  document.getElementById('statusJson').textContent = JSON.stringify(j, null, 2);
+  lastStatus = j;
+  if (j.patrol_route && j.patrol_route.current_label) {
+    highlightWaypoint(j.patrol_route.current_label);
+  } else if (j.nearest_wp && j.nearest_wp.label) {
+    highlightWaypoint(j.nearest_wp.label, true);
+  }
+  const newUnread = typeof j.alerts_unread === 'number' && j.alerts_unread > lastAlertUnread;
+  const newTotal = typeof j.alerts_total === 'number' && j.alerts_total > lastAlertTotal;
+  if (newUnread || newTotal) {
+    playAlertSound();
+    loadAlerts();
+  }
+  lastAlertUnread = j.alerts_unread || 0;
+  lastAlertTotal = j.alerts_total || 0;
+  syncCameraFromStatus(j);
+}
+
+let previewData = null;
+let planCatalog = [];
+
+async function loadPlans() {
+  const r = await fetch('/api/security/plans', { headers: authHeaders() });
+  if (!r.ok) return;
+  const j = await r.json();
+  planCatalog = j.plans || [];
+  const sel = document.getElementById('planSelect');
+  sel.innerHTML = '';
+  for (const p of planCatalog) {
+    const opt = document.createElement('option');
+    opt.value = p.path;
+    opt.textContent = `${p.id} · ${p.floor} · ${p.waypoint_count}点 · ${p.map_yaml}`;
+    sel.appendChild(opt);
+  }
+  if (j.selected && j.selected._path) {
+    for (const opt of sel.options) {
+      if (opt.value === j.selected._path) { opt.selected = true; break; }
+    }
+    await loadPreview();
+  }
+}
+
+async function selectPlan() {
+  const path = document.getElementById('planSelect').value;
+  const item = planCatalog.find(p => p.path === path);
+  const r = await fetch('/api/security/plans/select', {
+    method:'POST', headers: authHeaders(),
+    body: JSON.stringify({ path, id: item ? item.id : '' })
+  });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) { alert(j.detail || '选择失败'); return; }
+  document.getElementById('planInfo').textContent = j.message || '已启用';
+  previewData = j.preview;
+  drawMapPreview(j.preview);
+}
+
+async function loadPreview() {
+  const r = await fetch('/api/security/plans/preview', { headers: authHeaders() });
+  if (!r.ok) return;
+  const j = await r.json();
+  document.getElementById('planInfo').textContent = j.message + (j.sync && j.sync.warning ? ' · ' + j.sync.warning : '');
+  previewData = j.preview;
+  drawMapPreview(j.preview);
+}
+
+function drawMapPreview(preview) {
+  if (!preview) return;
+  const box = document.getElementById('mapBox');
+  const img = document.getElementById('mapImg');
+  if (preview.overlay_png) {
+    box.style.display = 'block';
+    const url = '/api/security/map/overlay?path=' + encodeURIComponent(preview.overlay_png) + '&token=' + encodeURIComponent(token);
+    img.onload = () => redrawCanvas(preview);
+    img.src = url + '&_=' + Date.now();
+  } else {
+    box.style.display = 'none';
+  }
+}
+
+function redrawCanvas(preview) {
+  const img = document.getElementById('mapImg');
+  const canvas = document.getElementById('mapCanvas');
+  if (!img.naturalWidth) return;
+  canvas.width = img.clientWidth;
+  canvas.height = img.clientHeight;
+  const sx = canvas.width / img.naturalWidth;
+  const sy = canvas.height / img.naturalHeight;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  const wps = preview.ordered || preview.waypoints || [];
+  ctx.strokeStyle = '#3d7eff';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  wps.forEach((wp, i) => {
+    const col = wp.grid_col, row = wp.grid_row;
+    if (col == null || row == null) return;
+    const x = col * sx, y = row * sy;
+    if (i === 0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    ctx.fillStyle = wp.kind === 'anchor' ? '#2ecc71' : '#e74c3c';
+    ctx.beginPath(); ctx.arc(x,y,5,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.font = '10px sans-serif';
+    ctx.fillText(wp.label || wp.index, x+6, y-6);
+  });
+  ctx.stroke();
+}
+
+function highlightWaypoint(label, blink) {
+  if (!previewData || !label) return;
+  redrawCanvas(previewData);
+  const canvas = document.getElementById('mapCanvas');
+  const ctx = canvas.getContext('2d');
+  const wp = (previewData.ordered || []).find(w => w.label === label);
+  if (!wp || wp.grid_col == null) return;
+  const img = document.getElementById('mapImg');
+  const sx = canvas.width / img.naturalWidth;
+  const sy = canvas.height / img.naturalHeight;
+  const x = wp.grid_col * sx, y = wp.grid_row * sy;
+  ctx.strokeStyle = blink ? '#ffaa00' : '#ffff00';
+  ctx.lineWidth = blink ? 4 : 3;
+  ctx.beginPath(); ctx.arc(x,y, blink ? 14 : 12, 0, Math.PI*2); ctx.stroke();
+}
+
+async function loadAlerts() {
+  const r = await fetch('/api/security/alerts?limit=24', { headers: authHeaders() });
+  if (!r.ok) return;
+  const j = await r.json();
+  lastAlertTotal = j.total || 0;
+  lastAlertUnread = j.unread || 0;
+  document.getElementById('alertSummary').textContent =
+    `共 ${j.total} 条，未读 ${j.unread}`;
+  const grid = document.getElementById('alertGrid');
+  grid.innerHTML = '';
+  for (const a of (j.items || [])) {
+    const div = document.createElement('div');
+    div.className = 'alertItem' + (a.id === selectedAlertId ? ' selected' : '');
+    const delBtn = document.createElement('button');
+    delBtn.className = 'alertDel';
+    delBtn.type = 'button';
+    delBtn.textContent = '×';
+    delBtn.title = '删除此抓拍';
+    delBtn.onclick = (ev) => { ev.stopPropagation(); deleteAlert(a.id); };
+    div.appendChild(delBtn);
+    const img = document.createElement('img');
+    const imgUrl = a.image_url + '?token=' + encodeURIComponent(token);
+    img.src = imgUrl;
+    img.alt = a.id;
+    div.onclick = (ev) => {
+      if (ev.target.closest('.alertDel')) return;
+      showAlertPreview(a, imgUrl, div);
+    };
+    const meta = document.createElement('div');
+    meta.className = 'alertMeta';
+    meta.textContent = `${a.mode || ''} conf=${a.confidence ?? '-'} ${(a.ts_iso || '').slice(11,19)}`;
+    div.appendChild(img);
+    div.appendChild(meta);
+    grid.appendChild(div);
+  }
+  if ((j.items || []).length && !selectedAlertId) {
+    const first = j.items[0];
+    showAlertPreview(first, first.image_url + '?token=' + encodeURIComponent(token), null);
+  } else if (selectedAlertId && !(j.items || []).some(x => x.id === selectedAlertId)) {
+    clearAlertPreview();
+  }
+}
+
+function formatAlertMeta(alert) {
+  if (!alert) return '';
+  const parts = [
+    alert.mode || '',
+    alert.confidence != null ? `conf=${alert.confidence}` : '',
+    alert.ts_iso ? alert.ts_iso.replace('T', ' ').slice(0, 19) : '',
+    alert.floor || '',
+    alert.nearest_wp && alert.nearest_wp.label ? `最近点 ${alert.nearest_wp.label}` : '',
+  ].filter(Boolean);
+  return parts.join(' · ') || alert.id || '';
+}
+
+function syncAlertPreviewUi() {
+  const img = document.getElementById('alertPreview');
+  const box = document.getElementById('alertPreviewBox');
+  const zoomBtn = document.getElementById('alertZoomBtn');
+  const hasImage = !!(img && img.getAttribute('src'));
+  if (box) box.classList.toggle('has-image', hasImage);
+  if (zoomBtn) zoomBtn.disabled = !hasImage;
+}
+
+function clearAlertPreview() {
+  selectedAlertId = '';
+  selectedAlertData = null;
+  const img = document.getElementById('alertPreview');
+  if (img) img.removeAttribute('src');
+  syncAlertPreviewUi();
+}
+
+function openAlertLightbox() {
+  const img = document.getElementById('alertPreview');
+  const src = img && img.getAttribute('src');
+  if (!src) return;
+  document.getElementById('alertLightboxImg').src = src;
+  document.getElementById('alertLightboxMeta').textContent = formatAlertMeta(selectedAlertData);
+  document.getElementById('alertLightbox').hidden = false;
+  document.body.style.overflow = 'hidden';
+}
+
+function closeAlertLightbox() {
+  document.getElementById('alertLightbox').hidden = true;
+  document.getElementById('alertLightboxImg').removeAttribute('src');
+  document.body.style.overflow = '';
+}
+
+function bindAlertPreviewInteractions() {
+  const box = document.getElementById('alertPreviewBox');
+  const img = document.getElementById('alertPreview');
+  if (box && !box.dataset.bound) {
+    box.dataset.bound = '1';
+    box.addEventListener('click', () => {
+      if (img && img.getAttribute('src')) openAlertLightbox();
+    });
+  }
+  if (!document.body.dataset.alertLightboxBound) {
+    document.body.dataset.alertLightboxBound = '1';
+    document.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Escape' && !document.getElementById('alertLightbox').hidden) {
+        closeAlertLightbox();
+      }
+    });
+  }
+}
+
+async function deleteAlert(alertId) {
+  if (!confirm('删除这条告警抓拍？')) return;
+  const r = await fetch('/api/security/alerts/' + encodeURIComponent(alertId), {
+    method: 'DELETE',
+    headers: authHeaders(),
+  });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) { alert(j.detail || '删除失败'); return; }
+  if (selectedAlertId === alertId) {
+    clearAlertPreview();
+  }
+  lastAlertTotal = j.alerts_total ?? lastAlertTotal;
+  loadAlerts();
+  refreshStatus();
+}
+
+async function deleteAllAlerts() {
+  if (!confirm('删除全部告警抓拍？此操作不可恢复。')) return;
+  const r = await fetch('/api/security/alerts/delete-all', {
+    method: 'POST',
+    headers: authHeaders(),
+  });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) { alert(j.detail || j.message || '删除失败'); return; }
+  clearAlertPreview();
+  lastAlertTotal = 0;
+  lastAlertUnread = 0;
+  loadAlerts();
+  refreshStatus();
+}
+
+function showAlertPreview(alert, imgUrl, divEl) {
+  selectedAlertId = alert.id;
+  selectedAlertData = alert;
+  document.getElementById('alertPreview').src = imgUrl;
+  syncAlertPreviewUi();
+  document.querySelectorAll('.alertItem').forEach(el => el.classList.remove('selected'));
+  if (divEl) divEl.classList.add('selected');
+}
+
+async function markAlertsRead() {
+  await fetch('/api/security/alerts/mark-read', { method:'POST', headers: authHeaders() });
+  lastAlertUnread = 0;
+  loadAlerts();
+  refreshStatus();
+}
+
+async function loadVisionSettings() {
+  const r = await fetch('/api/security/vision-settings', { headers: authHeaders() });
+  if (!r.ok) return;
+  const j = await r.json();
+  const vs = j.vision_settings || {};
+  const guardEl = document.getElementById('guardViewTrackEnabled');
+  const patrolEl = document.getElementById('patrolTrackEnabled');
+  const confEl = document.getElementById('detectionConf');
+  if (guardEl) guardEl.checked = vs.guard_view_track_enabled !== false;
+  if (patrolEl) patrolEl.checked = vs.patrol_track_enabled !== false;
+  if (confEl && vs.detection_conf != null) confEl.value = Number(vs.detection_conf).toFixed(2);
+}
+
+async function saveVisionToggles() {
+  const body = {
+    guard_view_track_enabled: !!document.getElementById('guardViewTrackEnabled')?.checked,
+    patrol_track_enabled: !!document.getElementById('patrolTrackEnabled')?.checked,
+  };
+  const hint = document.getElementById('visionSettingsHint');
+  const r = await fetch('/api/security/vision-settings/toggles', {
+    method: 'PUT',
+    headers: authHeaders(),
+    body: JSON.stringify(body),
+  });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) {
+    if (hint) hint.textContent = j.detail || '追人设置保存失败';
+    return;
+  }
+  if (hint) hint.textContent = j.message || '追人设置已保存';
+  refreshStatus();
+}
+
+async function applyVisionConf() {
+  const confEl = document.getElementById('detectionConf');
+  const hint = document.getElementById('visionSettingsHint');
+  const v = parseFloat(confEl?.value);
+  if (Number.isNaN(v) || v < 0.05 || v > 0.95) {
+    alert('置信度须在 0.05～0.95 之间');
+    return;
+  }
+  const r = await fetch('/api/security/vision-settings/apply-conf', {
+    method: 'POST',
+    headers: authHeaders(),
+    body: JSON.stringify({ detection_conf: v }),
+  });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) {
+    if (hint) hint.textContent = j.detail || '识别精度下发失败';
+    else alert(j.detail || '识别精度下发失败');
+    return;
+  }
+  if (confEl) confEl.value = v.toFixed(2);
+  if (hint) hint.textContent = j.message || `识别精度已设为 ${v.toFixed(2)}`;
+}
+
+async function mockPersonEvent() {
+  const r = await fetch('/api/security/dev/mock-person-event', {
+    method:'POST', headers: authHeaders(),
+    body: JSON.stringify({ sub_state_hint: 'patrol', confidence: 0.9, pose_x: 2.3, pose_y: 1.7, floor: '1F' })
+  });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) alert(j.detail || 'mock 失败');
+  refreshStatus();
+}
+
+function syncGuardControl(j) {
+  const card = document.getElementById('guardControlCard');
+  const hint = document.getElementById('guardControlHint');
+  const inp = document.getElementById('guardDeltaDeg');
+  if (!card || !hint) return;
+  const sub = (j && j.sub_state) || '';
+  const gp = (j && j.guard_phase) || '';
+  const inGuard = sub === 'guard' || sub === 'guard_timer' || sub === 'guard_view_track';
+  card.style.opacity = inGuard ? '1' : '0.55';
+  const blocked = sub === 'guard_view_track' || gp === 'view_tracking';
+  if (inp) inp.disabled = blocked || !inGuard;
+  if (blocked) {
+    hint.textContent = '视角跟踪中：不可手动转向，等人离开视野后恢复';
+  } else if (gp === 'manual_rotating') {
+    hint.textContent = '手动转向执行中…';
+  } else if (inGuard) {
+    hint.textContent = '驻守待命：输入角度后点「转向」（左负右正）';
+  } else {
+    hint.textContent = '仅驻守状态下可用';
+  }
+}
+
+async function guardRotate(deltaDeg) {
+  const r = await fetch('/api/security/guard/rotate', {
+    method:'POST', headers: authHeaders(),
+    body: JSON.stringify({ delta_deg: deltaDeg })
+  });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) alert(typeof j.detail === 'string' ? j.detail : JSON.stringify(j.detail) || '转向失败');
+  refreshStatus();
+}
+
+function guardRotateFromInput() {
+  const v = parseFloat(document.getElementById('guardDeltaDeg').value);
+  if (Number.isNaN(v)) { alert('请输入有效角度'); return; }
+  guardRotate(v);
+}
+
+async function guardRotateCancel() {
+  const r = await fetch('/api/security/guard/rotate/cancel', { method:'POST', headers: authHeaders() });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) alert(j.detail || '取消失败');
+  refreshStatus();
+}
+
+async function enterPatrol() {
+  const body = {
+    first_mode: document.getElementById('firstMode').value,
+    patrol_rounds: parseInt(document.getElementById('rounds').value, 10) || 0,
+    guard_between_min: parseInt(document.getElementById('guardMin').value, 10) || 0,
+  };
+  const r = await fetch('/api/security/patrol/enter', { method:'POST', headers: authHeaders(), body: JSON.stringify(body) });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) alert(j.detail || '进入失败');
+  refreshStatus();
+}
+
+async function exitPatrol() {
+  const r = await fetch('/api/security/patrol/exit', { method:'POST', headers: authHeaders() });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) alert(j.detail || '退出失败');
+  refreshStatus();
+}
+
+async function mockAtHome() {
+  const r = await fetch('/api/security/dev/mock-at-home', { method:'POST', headers: authHeaders() });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) {
+    const detail = j.detail;
+    alert(typeof detail === 'string' ? detail : JSON.stringify(detail) || 'mock 失败');
+    return;
+  }
+  if (j.message) alert(j.message);
+  refreshStatus();
+}
+
+async function loadSchedules() {
+  const r = await fetch('/api/security/schedules', { headers: authHeaders() });
+  if (!r.ok) return;
+  const j = await r.json();
+  const s = (j.schedules || [])[0];
+  if (!s) return;
+  document.getElementById('schedEnabled').checked = !!s.enabled;
+  document.getElementById('schedStart').value = s.start || '22:00';
+  document.getElementById('schedEnd').value = s.end || '06:00';
+  document.getElementById('schedMode').value = s.mode || 'patrol';
+}
+
+async function saveSchedules() {
+  const body = {
+    schedules: [{
+      name: 'night_security',
+      enabled: document.getElementById('schedEnabled').checked,
+      start: document.getElementById('schedStart').value,
+      end: document.getElementById('schedEnd').value,
+      weekdays: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+      mode: document.getElementById('schedMode').value,
+      patrol_plan: 'default',
+    }]
+  };
+  const r = await fetch('/api/security/schedules', { method:'PUT', headers: authHeaders(), body: JSON.stringify(body) });
+  if (!r.ok) alert('保存失败');
+  else alert('排班已保存');
+}
+
+if (token) {
+  fetch('/api/security/schedules', { headers: authHeaders() }).then(r => {
+    if (r.ok) {
+      document.getElementById('loginBox').style.display = 'none';
+      document.getElementById('mainUI').style.display = 'block';
+      loadSchedules();
+      loadPlans();
+      loadAlerts();
+      loadVisionSettings();
+      loadCameraUrlPref();
+      bindAlertPreviewInteractions();
+      syncStreamModeRadios();
+      refreshStatus();
+      setInterval(refreshStatus, 2000);
+    }
+  });
+}
+</script>
+</body>
+</html>

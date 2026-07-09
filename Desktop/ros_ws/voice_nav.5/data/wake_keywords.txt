@@ -1,0 +1,2 @@
+# Auto-generated on RockPi by generate_wake_keywords.py or WakeGate startup.
+# Do not edit on Windows; set VOICE_WAKE_WORDS instead.

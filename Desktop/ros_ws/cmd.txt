@@ -1,0 +1,25 @@
+建图：ros2 launch rt_robot_nav2 rt_robot_nav2_complete.launch.py use_slam:=true use_nav:=false open_rviz:=true
+
+键盘控制：ros2 run chassis_controller keyboard_teleop
+
+# 大模型控车 + 语音（Sherpa → aichat 同款: 8001/rkllm_chat → <rtt_*> → car_cmd）
+自包含总脚本: bash ~/Desktop/bootstrap_ai_car_all.sh
+日常启动:     bash ~/Desktop/rock_ws/ros_ws/scripts/run_ai_car_all.sh
+语音链路:     voice_to_ai_car.py 调用 ai_app/RKSDK/test_rkllm_run/aichat.py
+
+# 语音控车（旧版，可选）
+一键启动：bash ~/Desktop/rock_ws/ros_ws/scripts/run_voice_car_all.sh
+
+保存地图：ros2 launch rt_robot_nav2 save_map.launch.py map_name:=my_map
+
+导航（使用指定地图）：ros2 launch rt_robot_nav2 rt_robot_nav2_complete.launch.py use_slam:=false use_nav:=true map_file:=my_map.yaml open_rviz:=true
+
+# 深度相机辅助导航（仅深度，无彩色；/scan + /scan_depth 融合 costmap）
+主启动：bash ~/Desktop/rock_ws/ros_ws/scripts/start_nav.sh
+深度相机（独立终端）：bash ~/Desktop/rock_ws/ros_ws/scripts/start_camera.sh
+检查深度：ros2 topic hz /camera/depth/image_raw
+检查融合激光：ros2 topic hz /scan_depth
+关闭深度融合：use_depth_nav:=false
+
+依赖：sudo apt install ros-foxy-depthimage-to-laserscan
+Orbbec：~/orbbec_ws 已编译；start_camera.sh 仅 enable_depth，enable_color:=false

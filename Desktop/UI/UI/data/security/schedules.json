@@ -1,0 +1,13 @@
+{
+  "schedules": [
+    {
+      "name": "night_security",
+      "enabled": false,
+      "start": "22:00",
+      "end": "06:00",
+      "weekdays": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+      "mode": "patrol",
+      "patrol_plan": "default"
+    }
+  ]
+}

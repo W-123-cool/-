@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+  <title>NovaJoy &#x8F66;&#x8F7D;&#x63A7;&#x5236;&#x53F0;</title>
+  <script>
+  (function () {
+    function assetBase() {
+      if (location.protocol === "file:") return "..";
+      var p = location.pathname || "";
+      if (p === "/onboard" || p.endsWith("/onboard.html") || p === "/security" || p.endsWith("/security/index.html"))
+        return "/ui-assets";
+      return "..";
+    }
+    window.UI_ASSET = function (name) {
+      return assetBase() + "/" + encodeURI(name);
+    };
+    document.documentElement.style.setProperty("--ui-bg", "url('" + UI_ASSET("b.png") + "')");
+  })();
+  </script>
+  <style>
+    :root {
+      --accent: #00d4ff;
+      --text: #e8f4ff;
+      --muted: #a7c0d8;
+      --warn: #ffb020;
+      --glass: rgba(8, 26, 47, 0.82);
+      --glass-border: rgba(0, 212, 255, 0.22);
+      --touch-min: 72px;
+    }
+    * { box-sizing: border-box; }
+    html { font-size: 20px; -webkit-text-size-adjust: 100%; }
+    @media (min-width: 1600px) { html { font-size: 22px; } }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "Noto Sans SC", "Microsoft YaHei", system-ui, sans-serif;
+      color: var(--text);
+      min-height: 100vh;
+      padding: 1rem 1.25rem;
+      background-color: #061220;
+      /* 避免 fixed 背景在虚拟键盘/远程桌面 resize 时整页重绘 */
+      background-image: var(--ui-bg, url("/ui-assets/b.png"));
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-attachment: scroll;
+    }
+    body.input-active {
+      /* 输入法弹出时减轻绘制负担 */
+      background-image: none;
+    }
+    .page-wrap {
+      width: 100%;
+      max-width: 1880px;
+      min-height: calc(100vh - 2rem);
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    h1 { margin: 0; font-size: 1.6rem; font-weight: 700; letter-spacing: 0.02em; }
+    .top {
+      display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center;
+      padding: 0.85rem 1.1rem;
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 14px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      flex-shrink: 0;
+      contain: layout style paint;
+    }
+    .brand-icon { width: 64px; height: 64px; object-fit: contain; flex-shrink: 0; }
+    .top .meta { flex: 1; min-width: 200px; font-size: 1rem; color: var(--muted); text-align: right; }
+    .voice-row {
+      display: flex; gap: 0.75rem; align-items: stretch;
+      flex-shrink: 0;
+    }
+    .btn {
+      border: 1px solid var(--glass-border);
+      background: rgba(0, 212, 255, 0.12);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 0.85rem 1.25rem;
+      font-size: 1.15rem;
+      cursor: pointer;
+      touch-action: manipulation;
+      min-height: var(--touch-min);
+    }
+    .btn:hover { background: rgba(0, 212, 255, 0.22); }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .btn.primary { background: rgba(0, 212, 255, 0.32); font-weight: 600; border-color: rgba(0, 212, 255, 0.45); }
+    .btn.warn { background: rgba(255, 176, 32, 0.25); border-color: rgba(255, 176, 32, 0.4); }
+    .btn.voice { flex: 0 0 280px; font-size: 1.25rem; font-weight: 700; }
+    .hint { flex: 1; font-size: 1.05rem; color: var(--muted); display: flex; align-items: center; }
+    .tabs { display: flex; gap: 0.6rem; flex-shrink: 0; }
+    .tab {
+      flex: 1; text-align: center; padding: 0.85rem 1rem; border-radius: 12px;
+      border: 1px solid var(--glass-border); background: rgba(0, 0, 0, 0.2);
+      color: var(--muted); cursor: pointer;
+      font-size: 1.2rem; font-weight: 600;
+      min-height: var(--touch-min);
+    }
+    .tab.active { background: var(--glass); color: var(--accent); border-color: rgba(0, 212, 255, 0.45); }
+    .panel { display: none; flex: 1; min-height: 0; content-visibility: hidden; }
+    .panel.active { display: flex; flex-direction: column; gap: 0.75rem; content-visibility: visible; }
+    .panel-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 1fr;
+      gap: 0.75rem;
+      flex: 1;
+      min-height: 0;
+    }
+    .card {
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 14px;
+      padding: 1rem 1.1rem;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+      contain: layout style paint;
+    }
+    .panel > .card { margin-bottom: 0; }
+    .card h2 { margin: 0 0 0.65rem; font-size: 1.15rem; color: var(--accent); }
+    .status-card { flex-shrink: 0; }
+    .status-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 0.55rem; font-size: 1.05rem;
+    }
+    .status-grid div {
+      padding: 0.65rem 0.8rem;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 10px;
+      border: 1px solid rgba(0, 212, 255, 0.1);
+      line-height: 1.35;
+    }
+    .rooms {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+      gap: 0.55rem;
+      margin: 0.65rem 0;
+    }
+    .room {
+      min-height: 64px;
+      padding: 0.65rem 0.5rem;
+      border-radius: 10px;
+      border: 1px solid var(--glass-border);
+      background: rgba(0, 0, 0, 0.2);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 1.15rem;
+      font-weight: 600;
+    }
+    .room.sel { border-color: var(--accent); background: rgba(0, 212, 255, 0.22); }
+    .room:disabled { opacity: 0.4; }
+    .row { display: flex; flex-wrap: wrap; gap: 0.55rem; margin-top: 0.65rem; }
+    .row .btn { flex: 1; min-width: 160px; }
+    input {
+      width: 100%; padding: 0.85rem 1rem; border-radius: 10px;
+      border: 1px solid var(--glass-border); background: rgba(0, 0, 0, 0.35);
+      color: var(--text); font-size: 1.15rem; margin-bottom: 0.55rem;
+      min-height: var(--touch-min);
+    }
+    pre.log {
+      margin: 0; flex: 1; min-height: 220px; max-height: 42vh; overflow: auto;
+      font-size: 0.95rem; color: var(--muted); white-space: pre-wrap;
+      background: rgba(0, 0, 0, 0.3); padding: 0.75rem; border-radius: 10px;
+      line-height: 1.45;
+    }
+    .log-card { display: flex; flex-direction: column; min-height: 0; }
+    .delivery-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+    }
+    .delivery-grid .card { height: 100%; }
+    .banner {
+      padding: 0.75rem 1rem; border-radius: 10px;
+      background: rgba(255, 176, 32, 0.18); color: var(--warn);
+      font-size: 1.05rem; display: none;
+      border: 1px solid rgba(255, 176, 32, 0.35);
+      flex-shrink: 0;
+    }
+    .banner.show { display: block; }
+    .toast {
+      position: fixed; left: 50%; bottom: 1.5rem; transform: translateX(-50%);
+      background: rgba(6, 18, 32, 0.96); padding: 0.85rem 1.25rem; border-radius: 10px;
+      font-size: 1.1rem; display: none; z-index: 99; max-width: 90vw;
+      border: 1px solid var(--glass-border);
+    }
+    .toast.show { display: block; }
+    @media (max-width: 1200px) {
+      .panel-grid, .delivery-grid { grid-template-columns: 1fr; }
+      .btn.voice { flex: 0 0 220px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-wrap">
+  <div class="top">
+    <img class="brand-icon" id="brandIcon" src="/ui-assets/b.png" alt="NVJ"/>
+    <h1 id="pageTitle"></h1>
+    <div class="meta" id="apiMeta">-</div>
+  </div>
+  <div id="banner" class="banner"></div>
+  <div class="voice-row">
+    <button type="button" class="btn primary voice" id="btnVoice"></button>
+    <div class="hint" id="voiceHint"></div>
+  </div>
+  <div class="card status-card">
+    <h2 id="statusTitle"></h2>
+    <div class="status-grid" id="statusGrid">
+      <div id="stTour">-</div>
+      <div id="stDelivery">-</div>
+      <div id="stMutex">-</div>
+      <div id="stStt">-</div>
+    </div>
+  </div>
+  <div class="tabs">
+    <button type="button" class="tab active" data-tab="tour" id="tabTour"></button>
+    <button type="button" class="tab" data-tab="delivery" id="tabDelivery"></button>
+  </div>
+  <div id="panelTour" class="panel active">
+    <div class="panel-grid">
+      <div class="card">
+        <h2 id="roomTitle"></h2>
+        <div id="roomPick" class="rooms"></div>
+        <div class="hint"><span id="selLabel"></span><span id="selRoom">-</span></div>
+        <div class="row">
+          <button type="button" class="btn primary" id="btnTourGo"></button>
+          <button type="button" class="btn" id="btnTourCancel"></button>
+          <button type="button" class="btn warn" id="btnTourCancel2" style="display:none"></button>
+          <button type="button" class="btn" id="btnSimArrive" style="display:none"></button>
+        </div>
+      </div>
+      <div class="card log-card">
+        <h2 id="tourLogTitle"></h2>
+        <pre class="log" id="tourLog"></pre>
+      </div>
+    </div>
+  </div>
+  <div id="panelDelivery" class="panel">
+    <div class="card">
+      <h2 id="queueTitle"></h2>
+      <pre class="log" id="queueOut"></pre>
+      <button type="button" class="btn" id="btnRefreshQ"></button>
+    </div>
+    <div class="delivery-grid">
+      <div class="card">
+        <h2 id="confirmTitle"></h2>
+        <input id="inMatch" autocomplete="off" inputmode="numeric" />
+        <button type="button" class="btn primary" id="btnConfirm"></button>
+      </div>
+      <div class="card">
+        <h2 id="deliveredTitle"></h2>
+        <input id="inTask" autocomplete="off" />
+        <button type="button" class="btn" id="btnDelivered"></button>
+      </div>
+    </div>
+    <div class="card">
+      <h2 id="maintTitle"></h2>
+      <div class="row">
+        <button type="button" class="btn" id="btnReturn"></button>
+        <button type="button" class="btn warn" id="btnClear"></button>
+      </div>
+    </div>
+  </div>
+  <div class="toast" id="toast"></div>
+  </div>
+  <script>
+(function () {
+  var T = {
+    pageTitle: "\u8f66\u8f7d\u63a7\u5236\u53f0",
+    voice: "\u8bed\u97f3\u8f93\u5165",
+    voiceEnd: "\u7ed3\u675f\u5f55\u97f3",
+    voiceSpeak: "\u5f00\u59cb\u8bf4\u8bdd",
+    hintSleep: "\u672a\u5524\u9192 \u00b7 \u70b9\u4e00\u4e0b\u5524\u9192",
+    hintAwake: "\u5df2\u5524\u9192 \u00b7 \u70b9\u4e00\u4e0b\u5f00\u59cb\u8bf4\u8bdd",
+    hintRec: "\u5f55\u97f3\u4e2d\u2026 \u8bf7\u8bf4\u8bdd",
+    status: "\u72b6\u6001",
+    tabTour: "\u5bfc\u89c8",
+    tabDelivery: "\u9001\u8d27",
+    roomTitle: "\u76ee\u6807\u623f\u95f4",
+    selLabel: "\u5df2\u9009\uff1a",
+    tourGo: "\u786e\u8ba4\u5bfc\u89c8",
+    tourGoNo: "\u786e\u8ba4\u5bfc\u89c8\uff08\u4e0d\u53ef\u7528\uff09",
+    tourCancel: "\u53d6\u6d88\u5bfc\u89c8",
+    tourCancelNav: "\u53d6\u6d88\u5bfc\u822a",
+    tourCancel2: "\u786e\u8ba4\u53d6\u6d88",
+    simArrive: "\u6a21\u62df\u5230\u7ad9",
+    tourLog: "\u5bfc\u89c8\u65e5\u5fd7",
+    queueTitle: "\u5f85\u6295\u4ef6 / \u9001\u8d27\u4e2d",
+    queueEmpty: "(\u961f\u5217\u4e3a\u7a7a)",
+    queueLoad: "\u52a0\u8f7d\u4e2d\u2026",
+    refreshQ: "\u5237\u65b0\u961f\u5217",
+    confirmTitle: "\u786e\u8ba4\u6295\u4ef6",
+    matchPh: "\u6295\u4ef6\u7801\uff086 \u4f4d\u6570\u5b57\uff09",
+    confirm: "\u786e\u8ba4\u6295\u4ef6",
+    confirmNo: "\u786e\u8ba4\u6295\u4ef6\uff08\u4e0d\u53ef\u7528\uff09",
+    deliveredTitle: "\u6807\u8bb0\u9001\u8fbe",
+    taskPh: "\u4efb\u52a1 ID",
+    delivered: "\u6807\u8bb0\u9001\u8fbe",
+    maint: "\u7ef4\u62a4",
+    returnHome: "\u6a21\u62df\u56de\u4f4d",
+    clearAll: "\u6e05\u7a7a\u5168\u90e8\u4efb\u52a1",
+    clearAsk: "\u6e05\u7a7a\u5168\u90e8\u4efb\u52a1\uff1f",
+    pickRoom: "\u8bf7\u9009\u62e9\u623f\u95f4",
+    enterMatch: "\u8bf7\u8f93\u5165\u6295\u4ef6\u7801",
+    enterTask: "\u8bf7\u8f93\u5165\u4efb\u52a1 ID",
+    cancelHint: "\u8bf7\u518d\u6b21\u70b9\u51fb\u786e\u8ba4\u53d6\u6d88",
+    lblTour: "\u5bfc\u89c8",
+    lblDelivery: "\u9001\u8d27",
+    lblMutex: "\u4e92\u65a5",
+    lblStt: "\u8bc6\u522b",
+    ok: "\u6b63\u5e38",
+    offline: "\u79bb\u7ebf",
+    recog: "\u8bc6\u522b",
+    voiceLog: "\u8bed\u97f3",
+    roomLoadErr: "\u623f\u95f4\u8868\u52a0\u8f7d\u5931\u8d25",
+    queueErr: "\u52a0\u8f7d\u5931\u8d25",
+    mutexTourDel: "\u5bfc\u89c8\u4e2d\uff1a\u4e0d\u53ef\u6295\u4ef6",
+    mutexTourShip: "\u5bfc\u89c8\u4e2d\uff1a\u9001\u8d27\u4efb\u52a1\u6682\u505c",
+    mutexReturn: "\u9001\u8d27\u8fd4\u822a\u4e2d\uff1a\u4e0d\u53ef\u5f00\u5bfc\u89c8"
+  };
+
+  document.getElementById("pageTitle").textContent = "NovaJoy " + T.pageTitle;
+  var brandEl = document.getElementById("brandIcon");
+  if (brandEl && window.UI_ASSET) brandEl.src = UI_ASSET("\u65e0\u5b57\u56fe\u6807.png");
+  document.getElementById("statusTitle").textContent = T.status;
+  document.getElementById("tabTour").textContent = T.tabTour;
+  document.getElementById("tabDelivery").textContent = T.tabDelivery;
+  document.getElementById("roomTitle").textContent = T.roomTitle;
+  document.getElementById("selLabel").textContent = T.selLabel;
+  document.getElementById("btnTourGo").textContent = T.tourGo;
+  document.getElementById("btnTourCancel").textContent = T.tourCancel;
+  document.getElementById("btnTourCancel2").textContent = T.tourCancel2;
+  document.getElementById("btnSimArrive").textContent = T.simArrive;
+  document.getElementById("tourLogTitle").textContent = T.tourLog;
+  document.getElementById("queueTitle").textContent = T.queueTitle;
+  document.getElementById("queueOut").textContent = T.queueLoad;
+  document.getElementById("btnRefreshQ").textContent = T.refreshQ;
+  document.getElementById("confirmTitle").textContent = T.confirmTitle;
+  document.getElementById("inMatch").placeholder = T.matchPh;
+  document.getElementById("btnConfirm").textContent = T.confirm;
+  document.getElementById("deliveredTitle").textContent = T.deliveredTitle;
+  document.getElementById("inTask").placeholder = T.taskPh;
+  document.getElementById("btnDelivered").textContent = T.delivered;
+  document.getElementById("maintTitle").textContent = T.maint;
+  document.getElementById("btnReturn").textContent = T.returnHome;
+  document.getElementById("btnClear").textContent = T.clearAll;
+
+  var params = new URLSearchParams(location.search);
+  var API = (params.get("api") || location.origin).replace(/\/$/, "");
+  var POLL_IDLE_MS = 2000;
+  var POLL_BUSY_MS = 1000;
+  var POLL_INPUT_MS = 4000;
+  var selectedRoom = "";
+  var cancelPending = false;
+  var ptt = { awake: false, recording: false, partial: "" };
+  var robot = null;
+  var tour = null;
+  var pollTimer = null;
+  var refreshInflight = false;
+  var refreshQueued = false;
+  var inputFocused = false;
+  var lastRenderKey = "";
+  var lastTourBtnKey = "";
+  var lastDeliveryBtnKey = "";
+  var roomButtonsBound = false;
+
+  function pollIntervalMs() {
+    if (inputFocused || document.hidden) return POLL_INPUT_MS;
+    var ph = phase();
+    if (ptt.recording || ph === "navigating" || ph === "holding" || ph === "returning") return POLL_BUSY_MS;
+    return POLL_IDLE_MS;
+  }
+
+  function schedulePoll() {
+    if (pollTimer) clearTimeout(pollTimer);
+    pollTimer = setTimeout(function () {
+      pollTick();
+    }, pollIntervalMs());
+  }
+
+  function setInputActive(on) {
+    inputFocused = !!on;
+    document.body.classList.toggle("input-active", inputFocused);
+    schedulePoll();
+  }
+
+  document.addEventListener("focusin", function (ev) {
+    var t = ev.target;
+    if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) setInputActive(true);
+  });
+  document.addEventListener("focusout", function () {
+    setTimeout(function () {
+      var ae = document.activeElement;
+      if (!ae || (ae.tagName !== "INPUT" && ae.tagName !== "TEXTAREA" && !ae.isContentEditable)) {
+        if (inputFocused) {
+          setInputActive(false);
+          refreshAll(true);
+        }
+      }
+    }, 0);
+  });
+  document.addEventListener("visibilitychange", function () { schedulePoll(); });
+  if (window.visualViewport) {
+    var lastVvh = window.visualViewport.height;
+    window.visualViewport.addEventListener("resize", function () {
+      var h = window.visualViewport.height;
+      if (Math.abs(h - lastVvh) > 80) {
+        setInputActive(h < window.innerHeight * 0.82);
+      }
+      lastVvh = h;
+    });
+  }
+
+  function $(id) { return document.getElementById(id); }
+  var tourLog = [];
+  function logTour(msg) {
+    var t = new Date().toLocaleTimeString();
+    tourLog.push("[" + t + "] " + msg);
+    while (tourLog.length > 40) tourLog.shift();
+    $("tourLog").textContent = tourLog.join("\n");
+  }
+
+  var toastT = null;
+  function toast(msg) {
+    var el = $("toast");
+    el.textContent = msg;
+    el.classList.add("show");
+    clearTimeout(toastT);
+    toastT = setTimeout(function () { el.classList.remove("show"); }, 2800);
+  }
+
+  async function api(method, path, body) {
+    var opt = { method: method, headers: { Accept: "application/json" } };
+    if (body !== undefined) {
+      opt.headers["Content-Type"] = "application/json";
+      opt.body = JSON.stringify(body);
+    }
+    var r = await fetch(API + path, opt);
+    var data = {};
+    try { data = await r.json(); } catch (e) {}
+    if (!r.ok) {
+      var d = data.detail;
+      throw new Error(typeof d === "string" ? d : (d ? JSON.stringify(d) : r.statusText));
+    }
+    return data;
+  }
+
+  function phase() {
+    if (!tour) return "idle";
+    return tour.active ? String(tour.phase || "idle") : "idle";
+  }
+
+  function syncVoiceUi() {
+    var btn = $("btnVoice");
+    var hint = $("voiceHint");
+    if (ptt.recording) {
+      btn.textContent = T.voiceEnd;
+      hint.textContent = ptt.partial ? (T.hintRec + " " + ptt.partial) : T.hintRec;
+    } else if (ptt.awake) {
+      btn.textContent = T.voiceSpeak;
+      hint.textContent = T.hintAwake;
+    } else {
+      btn.textContent = T.voice;
+      hint.textContent = T.hintSleep;
+    }
+  }
+  syncVoiceUi();
+
+  function mutualBanner() {
+    if (!robot || !tour) return "";
+    var caps = robot.capabilities || {};
+    var tourBusy = robot.tour_busy;
+    var rs = robot.robot_state;
+    if (tourBusy && rs === "pending_delivery") return T.mutexTourDel;
+    if (tourBusy && (rs === "delivering" || rs === "await_pickup")) return T.mutexTourShip;
+    if (!tourBusy && rs === "returning") return T.mutexReturn;
+    if (!caps.can_start_tour && caps.can_start_tour_reason) return caps.can_start_tour_reason;
+    return "";
+  }
+
+  function renderStatus() {
+    var ph = tour ? (tour.phase_label_cn || phase()) : "-";
+    var tgt = tour && tour.room ? tour.room : "-";
+    var rs = robot ? robot.robot_state : "-";
+    var ban = mutualBanner() || T.ok;
+    var stt = ptt.partial || "-";
+    var key = ph + "|" + tgt + "|" + rs + "|" + ban + "|" + stt;
+    if (key === lastRenderKey) return;
+    lastRenderKey = key;
+    $("stTour").textContent = T.lblTour + "\uff1a" + ph + " \u00b7 " + tgt;
+    $("stDelivery").textContent = T.lblDelivery + "\uff1a" + rs;
+    $("stMutex").textContent = T.lblMutex + "\uff1a" + ban;
+    $("stStt").textContent = T.lblStt + "\uff1a" + stt;
+    var b = $("banner");
+    if (ban !== T.ok) { b.textContent = ban; b.classList.add("show"); }
+    else b.classList.remove("show");
+  }
+
+  function renderTourButtons() {
+    var ph = phase();
+    var caps = (robot && robot.capabilities) || {};
+    var roomLocked = ph === "navigating" || ph === "returning";
+    var uiLocked = tour && tour.ui_locked;
+    var canCancel = ph === "navigating" || ph === "holding";
+    var hasRoom = !!selectedRoom;
+    var canGo = hasRoom && caps.can_start_tour && (ph === "idle" || ph === "waiting_voice");
+    var mqttOn = tour && tour.mqtt_bridge_enabled;
+    var sim = ph === "navigating" && !mqttOn;
+    var key = [
+      ph, roomLocked, uiLocked, canCancel, cancelPending, hasRoom, canGo,
+      caps.can_start_tour, caps.can_start_tour_reason || "", sim, mqttOn
+    ].join("|");
+    if (key === lastTourBtnKey) return;
+    lastTourBtnKey = key;
+    document.querySelectorAll(".room").forEach(function (b) { b.disabled = roomLocked; });
+    var go = $("btnTourGo");
+    go.disabled = !canGo;
+    go.textContent = (!canGo && caps.can_start_tour_reason && (ph === "idle" || ph === "waiting_voice"))
+      ? T.tourGoNo : T.tourGo;
+    if (uiLocked || ph === "returning") go.disabled = true;
+    $("btnTourCancel").style.display = cancelPending ? "none" : (canCancel ? "inline-block" : "none");
+    $("btnTourCancel2").style.display = cancelPending && canCancel ? "inline-block" : "none";
+    $("btnTourCancel").textContent = ph === "navigating" ? T.tourCancel : T.tourCancelNav;
+    $("btnSimArrive").style.display = sim ? "inline-block" : "none";
+    $("btnSimArrive").disabled = !sim;
+  }
+
+  function renderDeliveryButtons() {
+    var caps = (robot && robot.capabilities) || {};
+    var ok = !!caps.can_courier_dispatch;
+    var reason = caps.can_courier_dispatch_reason || "";
+    var key = ok + "|" + reason;
+    if (key === lastDeliveryBtnKey) return;
+    lastDeliveryBtnKey = key;
+    $("btnConfirm").disabled = !ok;
+    $("btnDelivered").disabled = !ok;
+    $("btnConfirm").textContent = (!ok && reason) ? T.confirmNo : T.confirm;
+  }
+
+  async function loadRooms() {
+    try {
+      var data = await api("GET", "/api/building/rooms");
+      var box = $("roomPick");
+      box.innerHTML = "";
+      var ids = data.tour_room_ids || [];
+      ids.forEach(function (rid) {
+        var b = document.createElement("button");
+        b.type = "button";
+        b.className = "room" + (rid === selectedRoom ? " sel" : "");
+        b.textContent = rid;
+        b.dataset.roomId = rid;
+        box.appendChild(b);
+      });
+      if (!roomButtonsBound) {
+        roomButtonsBound = true;
+        box.addEventListener("click", function (ev) {
+          var btn = ev.target.closest(".room");
+          if (!btn || btn.disabled) return;
+          selectedRoom = btn.dataset.roomId || btn.textContent;
+          $("selRoom").textContent = selectedRoom;
+          box.querySelectorAll(".room").forEach(function (x) {
+            x.classList.toggle("sel", x.dataset.roomId === selectedRoom);
+          });
+          lastTourBtnKey = "";
+          renderTourButtons();
+        });
+      }
+      if (!selectedRoom && ids.length) {
+        selectedRoom = ids[0];
+        $("selRoom").textContent = selectedRoom;
+        var first = box.querySelector(".room");
+        if (first) first.classList.add("sel");
+      }
+    } catch (e) {
+      logTour(T.roomLoadErr + ": " + e.message);
+    }
+  }
+
+  async function refreshQueue() {
+    try {
+      var q = await api("GET", "/api/courier/queue");
+      var tasks = q.tasks || [];
+      if (!tasks.length) { $("queueOut").textContent = T.queueEmpty; return; }
+      $("queueOut").textContent = tasks.map(function (t) {
+        return (t.id || "").slice(0, 8) + "\u2026 | " + (t.door_plate || "") + " | " +
+          (t.match_key || "") + " | " + (t.status || "");
+      }).join("\n");
+    } catch (e) {
+      $("queueOut").textContent = T.queueErr + ": " + e.message;
+    }
+  }
+
+  async function refreshAll(force) {
+    if (refreshInflight) {
+      refreshQueued = true;
+      return;
+    }
+    refreshInflight = true;
+    try {
+      var res = await Promise.all([
+        api("GET", "/api/robot/state"),
+        api("GET", "/api/tour/status"),
+        api("GET", "/api/tour/voice/ptt/status")
+      ]);
+      robot = res[0];
+      tour = res[1];
+      var ps = res[2];
+      var prevPartial = ptt.partial;
+      ptt = { awake: !!ps.awake, recording: !!ps.recording, partial: ps.partial || "" };
+      if (ptt.partial && ptt.partial !== prevPartial) logTour(T.recog + ": " + ptt.partial);
+      if (phase() !== "navigating" && phase() !== "holding") cancelPending = false;
+      $("apiMeta").textContent = "API " + API.replace(/^https?:\/\//, "");
+      if (force) {
+        lastRenderKey = "";
+        lastTourBtnKey = "";
+        lastDeliveryBtnKey = "";
+      }
+      syncVoiceUi();
+      renderStatus();
+      renderTourButtons();
+      renderDeliveryButtons();
+    } catch (e) {
+      $("apiMeta").textContent = T.offline + ": " + e.message;
+    } finally {
+      refreshInflight = false;
+      if (refreshQueued) {
+        refreshQueued = false;
+        refreshAll(false);
+      }
+    }
+  }
+
+  async function pollTick() {
+    if (!document.hidden && !inputFocused) {
+      await refreshAll(false);
+      if ($("panelDelivery").classList.contains("active")) await refreshQueue();
+    }
+    schedulePoll();
+  }
+
+  $("btnVoice").onclick = async function () {
+    try {
+      var data = await api("POST", "/api/tour/voice/ptt/tap");
+      toast(data.message || "ok");
+      logTour(T.voiceLog + ": " + (data.message || data.action));
+      if (data.status) {
+        ptt = {
+          awake: !!data.status.awake,
+          recording: !!data.status.recording,
+          partial: data.status.partial || ""
+        };
+      }
+      syncVoiceUi();
+      await refreshAll();
+    } catch (e) { toast(e.message); }
+  };
+
+  $("btnTourGo").onclick = async function () {
+    if (!selectedRoom) return toast(T.pickRoom);
+    try {
+      var data = await api("POST", "/api/tour/start", { room: selectedRoom, discard_voice: true });
+      toast(data.message || "ok");
+      logTour(data.message || T.tourGo);
+      await refreshAll();
+    } catch (e) { toast(e.message); }
+  };
+
+  $("btnTourCancel").onclick = function () {
+    cancelPending = true;
+    logTour(T.cancelHint);
+    lastTourBtnKey = "";
+    renderTourButtons();
+  };
+
+  $("btnTourCancel2").onclick = async function () {
+    try {
+      var data = await api("POST", "/api/tour/holding/cancel");
+      cancelPending = false;
+      toast(data.message || "ok");
+      logTour(data.message || T.tourCancel);
+      await refreshAll();
+    } catch (e) { toast(e.message); }
+  };
+
+  $("btnSimArrive").onclick = async function () {
+    try {
+      var data = await api("POST", "/api/tour/simulate/arrived");
+      toast(data.message || "ok");
+      logTour(data.message || T.simArrive);
+      await refreshAll();
+    } catch (e) { toast(e.message); }
+  };
+
+  $("btnRefreshQ").onclick = refreshQueue;
+
+  $("btnConfirm").onclick = async function () {
+    var mk = $("inMatch").value.trim();
+    if (!mk) return toast(T.enterMatch);
+    try {
+      var data = await api("POST", "/api/courier/confirm", { match_key: mk });
+      toast(data.message || "ok");
+      $("inMatch").value = "";
+      await refreshQueue();
+      await refreshAll();
+    } catch (e) { toast(e.message); }
+  };
+
+  $("btnDelivered").onclick = async function () {
+    var tid = $("inTask").value.trim();
+    if (!tid) return toast(T.enterTask);
+    try {
+      var data = await api("POST", "/api/courier/mark-delivered/" + encodeURIComponent(tid));
+      toast(data.message || "ok");
+      $("inTask").value = "";
+      await refreshQueue();
+      await refreshAll();
+    } catch (e) { toast(e.message); }
+  };
+
+  $("btnReturn").onclick = async function () {
+    try {
+      var data = await api("POST", "/api/courier/robot/return-home");
+      toast(data.message || "ok");
+      await refreshAll();
+    } catch (e) { toast(e.message); }
+  };
+
+  $("btnClear").onclick = async function () {
+    if (!confirm(T.clearAsk)) return;
+    try {
+      var data = await api("POST", "/api/courier/debug/clear-all-tasks");
+      toast(data.message || "ok");
+      await refreshQueue();
+      await refreshAll();
+    } catch (e) { toast(e.message); }
+  };
+
+  document.querySelectorAll(".tab").forEach(function (tab) {
+    tab.onclick = function () {
+      document.querySelectorAll(".tab").forEach(function (t) { t.classList.remove("active"); });
+      document.querySelectorAll(".panel").forEach(function (p) { p.classList.remove("active"); });
+      tab.classList.add("active");
+      var name = tab.getAttribute("data-tab");
+      $("panel" + name.charAt(0).toUpperCase() + name.slice(1)).classList.add("active");
+      if (name === "delivery") refreshQueue();
+    };
+  });
+
+  if (params.get("tab") === "delivery") {
+    document.querySelector('.tab[data-tab="delivery"]').click();
+  }
+
+  loadRooms();
+  refreshQueue();
+  refreshAll(true);
+  schedulePoll();
+  window.addEventListener("beforeunload", function () { if (pollTimer) clearTimeout(pollTimer); });
+})();
+  </script>
+</body>
+</html>

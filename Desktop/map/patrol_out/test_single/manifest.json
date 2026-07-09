@@ -1,0 +1,43 @@
+{
+  "generated_at": "2026-06-30T06:51:15Z",
+  "tool_version": "0.1.0",
+  "mode": "single",
+  "switcher_path": "D:\\cd\\NovaJoy\\002-630\\Desktop\\ros_ws\\src\\smart_nav_manager\\smart_nav_manager\\switcher_node.py",
+  "map_dir": "D:\\cd\\NovaJoy\\002-630\\Desktop\\ros_ws\\install\\rt_robot_nav2\\share\\rt_robot_nav2\\map",
+  "floor_maps": {
+    "1F": "my_map5.yaml",
+    "2F": "my_map5.yaml"
+  },
+  "floor_order": [
+    "1F",
+    "2F"
+  ],
+  "anchors": {
+    "my_map3": "yaml:initial_pose (无楼层登记)"
+  },
+  "params": {
+    "coverage_mode": "full_free",
+    "max_uncovered_ratio": null,
+    "sample_step_m": 0.25,
+    "inflate_m": 0.3,
+    "spin_360": true
+  },
+  "maps": {
+    "my_map3.yaml": "9f2c1357669bea1a3e0a80bda571d15246d4e9543bcec926101f67197ed7e5a3",
+    "my_map3.pgm": "d20a2c03279635b7923b61f011dc5674b6d1b1fa9e68d986f2236f7c8dadbc33"
+  },
+  "plans_summary": [
+    {
+      "floor": "",
+      "map_yaml": "my_map3.yaml",
+      "coverage_ratio": 0.9989,
+      "waypoint_count": 356,
+      "route_length_m": 672.37
+    }
+  ],
+  "warnings": [
+    "FLOOR_MAPS 中多张楼层指向同一地图: ['my_map5.yaml']；全楼模式会对同图重复规划",
+    "单图模式且不在 FLOOR_MAPS：使用 yaml initial_pose 作锚点",
+    "候选点过多，采样步长由 0.25m 放宽到约 0.75m（2249 点）"
+  ]
+}

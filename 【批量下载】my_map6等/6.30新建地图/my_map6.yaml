@@ -1,0 +1,15 @@
+free_thresh: 0.25
+image: /home/rock/Desktop/rock_ws/ros_ws/install/rt_robot_nav2/share/rt_robot_nav2/map/my_map6.pgm
+initial_pose:
+  x: -0.05135166956737791
+  y: 0.05785633892903874
+  yaw: 0.5215425507092685
+  z: 0.0
+mode: trinary
+negate: 0
+occupied_thresh: 0.65
+origin:
+- -10
+- -10
+- 0
+resolution: 0.05

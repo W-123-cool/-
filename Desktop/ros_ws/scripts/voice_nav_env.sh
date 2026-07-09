@@ -1,0 +1,120 @@
+#!/usr/bin/env bash
+# Voice-nav runtime env (source before start).
+# Usage: source scripts/voice_nav_env.sh
+
+export DASHSCOPE_API_KEY="${DASHSCOPE_API_KEY:-sk-ws-H.RPIHMEH.G9vn.MEYCIQCN88T3FiCtqwU5XiDh2W652T0oDeTD9rRpDPWCQkC7YAIhAK09qA_koyOkCR2V1f6d1S80dj9P-pwJacN9Q-aH5RfJ}"
+if [[ -z "${DASHSCOPE_BASE_URL:-}" ]]; then
+  case "${DASHSCOPE_API_KEY}" in
+    sk-sp-*)
+      export DASHSCOPE_BASE_URL="https://coding.dashscope.aliyuncs.com/v1"
+      ;;
+    *)
+      export DASHSCOPE_BASE_URL="https://dashscope.aliyuncs.com/compatible-mode/v1"
+      ;;
+  esac
+fi
+if [[ -z "${DASHSCOPE_MODEL:-}" ]]; then
+  export DASHSCOPE_MODEL="qwen3.6-35b-a3b"
+fi
+
+export VOICE_NAV_USE_LLM="${VOICE_NAV_USE_LLM:-1}"
+export VOICE_NAV_BACKEND="${VOICE_NAV_BACKEND:-auto}"
+export VOICE_NAV_CLOUD_TIMEOUT="${VOICE_NAV_CLOUD_TIMEOUT:-15}"
+export VOICE_NAV_CLOUD_MAX_TOKENS="${VOICE_NAV_CLOUD_MAX_TOKENS:-256}"
+export VOICE_NAV_STARTUP_JSON="${VOICE_NAV_STARTUP_JSON:-1}"
+export VOICE_NAV_TTS_STARTUP="${VOICE_NAV_TTS_STARTUP:-1}"
+export VOICE_NAV_TTS_STATUS="${VOICE_NAV_TTS_STATUS:-1}"
+export VOICE_NAV_TTS_STATUS_BACKEND="${VOICE_NAV_TTS_STATUS_BACKEND:-cache}"
+export VOICE_NAV_TTS_DIALOG_BACKEND="${VOICE_NAV_TTS_DIALOG_BACKEND:-matcha}"
+# 缓存 wav 生成：matcha=模型预生成(自然音)  espeak=机械音
+export VOICE_NAV_CACHE_TTS_BACKEND="${VOICE_NAV_CACHE_TTS_BACKEND:-matcha}"
+export VOICE_NAV_TTS_FALLBACK="${VOICE_NAV_TTS_FALLBACK:-espeak}"
+export VOICE_NAV_TTS_STATUS_DEDUP="${VOICE_NAV_TTS_STATUS_DEDUP:-1}"
+export VOICE_NAV_MISSION_WATCHDOG_SEC="${VOICE_NAV_MISSION_WATCHDOG_SEC:-90}"
+
+# 跑动降噪 + 自适应 KWS 阈值（方案 A）
+export VOICE_NAV_DENOISE="${VOICE_NAV_DENOISE:-1}"
+export VOICE_NAV_DENOISE_HIGHPASS_HZ="${VOICE_NAV_DENOISE_HIGHPASS_HZ:-300}"
+export VOICE_NAV_DENOISE_GATE="${VOICE_NAV_DENOISE_GATE:-1}"
+export VOICE_NAV_DENOISE_AGC="${VOICE_NAV_DENOISE_AGC:-1}"
+export VOICE_NAV_DENOISE_TARGET_RMS="${VOICE_NAV_DENOISE_TARGET_RMS:-0.06}"
+export VOICE_NAV_DENOISE_MAX_GAIN="${VOICE_NAV_DENOISE_MAX_GAIN:-4.0}"
+export VOICE_NAV_DENOISE_NOISE_ALPHA="${VOICE_NAV_DENOISE_NOISE_ALPHA:-0.92}"
+export VOICE_NAV_DENOISE_QUIET_RMS="${VOICE_NAV_DENOISE_QUIET_RMS:-0.012}"
+export VOICE_NAV_DENOISE_DEBUG="${VOICE_NAV_DENOISE_DEBUG:-0}"
+export VOICE_WAKE_ADAPTIVE_THRESHOLD="${VOICE_WAKE_ADAPTIVE_THRESHOLD:-1}"
+export VOICE_WAKE_THRESHOLD_REBUILD_SEC="${VOICE_WAKE_THRESHOLD_REBUILD_SEC:-5}"
+
+export AI_CAR_LLM_HOST="${AI_CAR_LLM_HOST:-http://127.0.0.1:8001}"
+export AI_CAR_LLM_PATH="${AI_CAR_LLM_PATH:-/rkllm_chat}"
+export VOICE_NAV_LLM_TIMEOUT="${VOICE_NAV_LLM_TIMEOUT:-20}"
+
+export VOICE_NAV_MQTT_BROKER="${VOICE_NAV_MQTT_BROKER:-broker.emqx.io}"
+export VOICE_NAV_MQTT_TOPIC="${VOICE_NAV_MQTT_TOPIC:-robot/nav_room}"
+export VOICE_NAV_MQTT_CANCEL_TOPIC="${VOICE_NAV_MQTT_CANCEL_TOPIC:-robot/nav_cancel}"
+export VOICE_NAV_ROBOT_ID="${VOICE_NAV_ROBOT_ID:-robot01}"
+
+export VOICE_WAKE_ENABLED="${VOICE_WAKE_ENABLED:-1}"
+export VOICE_WAKE_WORDS="${VOICE_WAKE_WORDS:-你好小诺,小诺}"
+export VOICE_WAKE_REPLY="${VOICE_WAKE_REPLY:-我在}"
+export VOICE_WAKE_STOP_REPLY="${VOICE_WAKE_STOP_REPLY:-已停止当前导览任务，您现在有什么需求}"
+export VOICE_SESSION_TIMEOUT="${VOICE_SESSION_TIMEOUT:-180}"
+export VOICE_SESSION_TIMEOUT_LATCHED="${VOICE_SESSION_TIMEOUT_LATCHED:-600}"
+export VOICE_SESSION_LATCH="${VOICE_SESSION_LATCH:-1}"
+export VOICE_WAKE_FUZZY="${VOICE_WAKE_FUZZY:-1}"
+export VOICE_WAKE_THRESHOLD="${VOICE_WAKE_THRESHOLD:-0.20}"
+export VOICE_WAKE_SCORE="${VOICE_WAKE_SCORE:-1.0}"
+# 导览截停：可单独调低阈值提高灵敏度
+export VOICE_MISSION_WAKE_THRESHOLD="${VOICE_MISSION_WAKE_THRESHOLD:-0.15}"
+export VOICE_MISSION_WAKE_SCORE="${VOICE_MISSION_WAKE_SCORE:-1.2}"
+export VOICE_MISSION_KWS_DEBUG="${VOICE_MISSION_KWS_DEBUG:-0}"
+export VOICE_MISSION_KWS_DEBUG_SEC="${VOICE_MISSION_KWS_DEBUG_SEC:-3}"
+export VOICE_RELAX_FRAGMENT="${VOICE_RELAX_FRAGMENT:-1}"
+export VOICE_MERGE_SEC="${VOICE_MERGE_SEC:-10}"
+export VOICE_WAKE_PROVIDER="${VOICE_WAKE_PROVIDER:-cpu}"
+export VOICE_WAKE_MODEL_DIR="${VOICE_WAKE_MODEL_DIR:-${HOME}/Desktop/rk3588-offline-bundle/model/sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01-mobile}"
+
+# CPU：语音栈默认单线程，Nav 优先
+export SHERPA_NUM_THREADS="${SHERPA_NUM_THREADS:-1}"
+export SHERPA_TTS_NUM_THREADS="${SHERPA_TTS_NUM_THREADS:-1}"
+export VOICE_WAKE_THREADS="${VOICE_WAKE_THREADS:-1}"
+export OMP_NUM_THREADS="${OMP_NUM_THREADS:-2}"
+export VOICE_NAV_NAV_READY_TIMEOUT="${VOICE_NAV_NAV_READY_TIMEOUT:-25}"
+export VOICE_NAV_NAV_FIXED_SEC="${VOICE_NAV_NAV_FIXED_SEC:-10}"
+export VOICE_NAV_BRIDGE_WAIT_SEC="${VOICE_NAV_BRIDGE_WAIT_SEC:-25}"
+export SMART_NAV_BRIDGE_READY_FILE="${SMART_NAV_BRIDGE_READY_FILE:-/tmp/smart_nav_bridge.ready}"
+export SMART_NAV_ACTION_WAIT_SEC="${SMART_NAV_ACTION_WAIT_SEC:-30}"
+
+# 麦克风：AB13X USB（PipeWire/Pulse）；全名用 pactl list sources short 查看
+export VOICE_NAV_MIC_SUBSTR="${VOICE_NAV_MIC_SUBSTR:-AB13X|Generic.*USB.*Audio|AB13X_USB_Audio}"
+# 若自动检测失败，取消下行注释并填入完整源名（前缀 pulse: 必填）：
+# export AI_CAR_AUDIO_DEV=pulse:alsa_input.usb-Generic_AB13X_USB_Audio_XXXX.mono-fallback
+
+# PC backend URL (vehicle): copy scripts/onboard_api.env.example -> onboard_api.env
+_vne_dir="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+if [[ -f "${_vne_dir}/onboard_api.env" ]]; then
+  # shellcheck source=/dev/null
+  source "${_vne_dir}/onboard_api.env"
+fi
+
+# 语音交互：UI 按键 / 回车（非持续流式）
+export VOICE_INPUT_MODE="${VOICE_INPUT_MODE:-ui}"
+export VOICE_PTT_MIN_CHARS="${VOICE_PTT_MIN_CHARS:-2}"
+export VOICE_PTT_MAX_SEC="${VOICE_PTT_MAX_SEC:-60}"
+if [[ -n "${COURIER_API_BASE:-}" ]]; then
+  export VOICE_TOUR_API_BASE="${VOICE_TOUR_API_BASE:-${COURIER_API_BASE%/}}"
+elif [[ -n "${VOICE_TOUR_API_BASE:-}" ]]; then
+  export COURIER_API_BASE="${COURIER_API_BASE:-${VOICE_TOUR_API_BASE%/}}"
+fi
+
+voice_nav_env_info() {
+  echo "  LLM:      VOICE_NAV_USE_LLM=${VOICE_NAV_USE_LLM} backend=${VOICE_NAV_BACKEND}"
+  echo "  Cloud:    ${DASHSCOPE_MODEL} @ ${DASHSCOPE_BASE_URL}"
+  echo "  Local:    ${AI_CAR_LLM_HOST}${AI_CAR_LLM_PATH}"
+  echo "  MQTT nav: ${VOICE_NAV_MQTT_BROKER} topic=${VOICE_NAV_MQTT_TOPIC} cancel=${VOICE_NAV_MQTT_CANCEL_TOPIC}"
+  echo "  Wake:     enabled=${VOICE_WAKE_ENABLED} words=${VOICE_WAKE_WORDS}"
+  echo "  Mission:  threshold=${VOICE_MISSION_WAKE_THRESHOLD} debug=${VOICE_MISSION_KWS_DEBUG}"
+  echo "  Denoise:  enabled=${VOICE_NAV_DENOISE} agc=${VOICE_NAV_DENOISE_AGC:-1} adapt_thr=${VOICE_WAKE_ADAPTIVE_THRESHOLD:-1}"
+  echo "  TTS:      status=${VOICE_NAV_TTS_STATUS} status_backend=${VOICE_NAV_TTS_STATUS_BACKEND:-cache} cache_synth=${VOICE_NAV_CACHE_TTS_BACKEND:-matcha}"
+  echo "  Input:    mode=${VOICE_INPUT_MODE:-ui} api=${VOICE_TOUR_API_BASE:-${COURIER_API_BASE:-http://127.0.0.1:8000}} ptt_min=${VOICE_PTT_MIN_CHARS:-2}"
+}

@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>NovaJoy · 取货</title>
+  <script>
+  (function () {
+    function assetBase() {
+      if (location.protocol === "file:") return "..";
+      var p = location.pathname || "";
+      if (p === "/pickup" || p.endsWith("/pickup.html")) return "/ui-assets";
+      return "..";
+    }
+    window.UI_ASSET = function (name) {
+      return assetBase() + "/" + encodeURI(name);
+    };
+    document.documentElement.style.setProperty("--ui-bg", "url('" + UI_ASSET("b.png") + "')");
+  })();
+  </script>
+  <style>
+    :root {
+      --accent: #00d4ff;
+      --text: #e8f4ff;
+      --muted: #a7c0d8;
+      --ok: #4ade80;
+      --warn: #ffb020;
+      --glass: rgba(8, 26, 47, 0.88);
+      --glass-border: rgba(0, 212, 255, 0.22);
+      --touch-min: 48px;
+      --nav-h: 64px;
+    }
+    * { box-sizing: border-box; }
+    html { font-size: 16px; }
+    html, body { height: 100%; margin: 0; }
+    body {
+      font-family: "Segoe UI", "Noto Sans SC", "Microsoft YaHei", system-ui, sans-serif;
+      color: var(--text);
+      background: #061220 var(--ui-bg, url("/ui-assets/b.png")) center center / cover no-repeat fixed;
+      padding: 0.75rem 0.75rem calc(var(--nav-h) + 0.75rem);
+    }
+    .top {
+      display: flex; align-items: center; gap: 0.65rem;
+      padding: 0.75rem 0.9rem;
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 14px;
+      margin-bottom: 0.75rem;
+      backdrop-filter: blur(12px);
+    }
+    .top img { width: 44px; height: 44px; object-fit: contain; }
+    .top h1 { margin: 0; font-size: 1.05rem; flex: 1; }
+    .top .meta { font-size: 0.78rem; color: var(--muted); text-align: right; }
+    .panel { display: none; }
+    .panel.active { display: block; }
+    .card {
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 14px;
+      padding: 0.9rem 1rem;
+      margin-bottom: 0.75rem;
+      backdrop-filter: blur(10px);
+    }
+    .card h2 {
+      margin: 0 0 0.65rem;
+      font-size: 0.95rem;
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .grid2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.55rem;
+    }
+    .stat {
+      background: rgba(0, 0, 0, 0.22);
+      border: 1px solid var(--glass-border);
+      border-radius: 10px;
+      padding: 0.65rem 0.75rem;
+    }
+    .stat .lbl { font-size: 0.75rem; color: var(--muted); margin-bottom: 0.25rem; }
+    .stat .val { font-size: 1rem; font-weight: 600; word-break: break-all; }
+    label {
+      display: block;
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin: 0.55rem 0 0.3rem;
+    }
+    input {
+      width: 100%;
+      padding: 0.65rem 0.75rem;
+      border-radius: 10px;
+      border: 1px solid var(--glass-border);
+      background: rgba(0, 0, 0, 0.28);
+      color: var(--text);
+      font-size: 1rem;
+      min-height: var(--touch-min);
+    }
+    input:focus { outline: none; border-color: rgba(0, 212, 255, 0.55); }
+    .btn {
+      display: inline-block;
+      width: 100%;
+      margin-top: 0.65rem;
+      padding: 0.75rem 1rem;
+      border-radius: 12px;
+      border: 1px solid var(--glass-border);
+      background: rgba(0, 212, 255, 0.14);
+      color: var(--text);
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      touch-action: manipulation;
+      min-height: var(--touch-min);
+    }
+    .btn.primary { background: rgba(0, 212, 255, 0.32); border-color: rgba(0, 212, 255, 0.45); }
+    .btn.secondary { background: rgba(0, 0, 0, 0.22); }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.55rem; }
+    .task-list {
+      font-size: 0.88rem;
+      line-height: 1.5;
+      color: var(--muted);
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .sess { font-size: 0.88rem; margin: 0.35rem 0 0.5rem; }
+    .sess.ok { color: var(--ok); }
+    .sess.no { color: var(--muted); }
+    .bottom-nav {
+      position: fixed;
+      left: 0; right: 0; bottom: 0;
+      height: var(--nav-h);
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      background: rgba(6, 18, 32, 0.96);
+      border-top: 1px solid var(--glass-border);
+      backdrop-filter: blur(14px);
+      z-index: 20;
+    }
+    .nav-item {
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+    .nav-item.active { color: var(--accent); }
+    .toast {
+      position: fixed;
+      left: 50%; bottom: calc(var(--nav-h) + 12px);
+      transform: translateX(-50%) translateY(120%);
+      max-width: min(92vw, 420px);
+      padding: 0.75rem 1rem;
+      background: rgba(8, 26, 47, 0.96);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      font-size: 0.9rem;
+      z-index: 30;
+      transition: transform 0.25s ease;
+      text-align: center;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .hint { font-size: 0.82rem; color: var(--muted); line-height: 1.45; margin: 0 0 0.5rem; }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <img id="brandIcon" alt="NovaJoy" />
+    <h1 id="pageTitle">NovaJoy · 取货</h1>
+    <div class="meta" id="apiMeta">—</div>
+  </header>
+
+  <section class="panel active" id="panel-home">
+    <div class="card">
+      <h2>机器人状态</h2>
+      <div class="grid2">
+        <div class="stat"><div class="lbl">运行状态</div><div class="val" id="stRobot">—</div></div>
+        <div class="stat"><div class="lbl">进行中任务</div><div class="val" id="stTasks">—</div></div>
+      </div>
+      <button type="button" class="btn primary" id="btnRefreshHome">刷新</button>
+    </div>
+    <div class="card">
+      <h2>说明</h2>
+      <p class="hint">手机浏览器打开本页即可取货，无需安装 APK。请先在「我的」登录，再到「任务」发起取货或确认取货。</p>
+    </div>
+  </section>
+
+  <section class="panel" id="panel-tasks">
+    <div class="card">
+      <h2>发起取货</h2>
+      <label for="inDoor">门牌号</label>
+      <input id="inDoor" type="text" inputmode="text" autocomplete="off" placeholder="例如 101" />
+      <button type="button" class="btn primary" id="btnPickup">提交取货请求</button>
+    </div>
+    <div class="card">
+      <h2>到站确认取货</h2>
+      <label for="inTask">任务 ID</label>
+      <input id="inTask" type="text" autocomplete="off" placeholder="提交后自动填入" />
+      <label for="inPickPw">登录密码</label>
+      <input id="inPickPw" type="password" autocomplete="current-password" />
+      <button type="button" class="btn primary" id="btnVerify">确认取货</button>
+    </div>
+    <div class="card">
+      <h2>我的任务</h2>
+      <div class="task-list" id="taskList">请先登录</div>
+      <button type="button" class="btn secondary" id="btnRefreshTasks">刷新任务</button>
+    </div>
+  </section>
+
+  <section class="panel" id="panel-profile">
+    <div class="card">
+      <h2>账户</h2>
+      <p class="sess no" id="sessLabel">未登录</p>
+      <label for="inUser">用户名</label>
+      <input id="inUser" type="text" autocomplete="username" />
+      <label for="inPw">登录密码</label>
+      <input id="inPw" type="password" autocomplete="current-password" />
+      <div class="row2">
+        <button type="button" class="btn primary" id="btnRegister">注册并登录</button>
+        <button type="button" class="btn secondary" id="btnLogin">登录</button>
+      </div>
+      <button type="button" class="btn secondary" id="btnLogout">退出登录</button>
+    </div>
+    <div class="card">
+      <h2>连接</h2>
+      <p class="hint">本页与后端同源，API 自动指向当前地址。若 JSON 能打开，本页即可用。</p>
+      <label for="inApi">API 根地址（高级）</label>
+      <input id="inApi" type="url" />
+      <button type="button" class="btn secondary" id="btnSaveApi">保存 API 地址</button>
+    </div>
+  </section>
+
+  <nav class="bottom-nav">
+    <button type="button" class="nav-item active" data-tab="home">首页</button>
+    <button type="button" class="nav-item" data-tab="tasks">任务</button>
+    <button type="button" class="nav-item" data-tab="profile">我的</button>
+  </nav>
+  <div class="toast" id="toast"></div>
+
+  <script>
+  (function () {
+    var TASK_CN = {
+      pending_delivery: "待投件",
+      delivering: "送货中",
+      await_pickup: "待取货",
+      completed: "已完成"
+    };
+    var ROBOT_CN = {
+      idle: "初态",
+      pending_delivery: "待投件",
+      delivering: "送货中",
+      await_pickup: "待取货",
+      returning: "返回中"
+    };
+
+    var params = new URLSearchParams(location.search);
+    var API = (localStorage.getItem("nvj_pickup_api") || params.get("api") || location.origin).replace(/\/$/, "");
+    var token = localStorage.getItem("nvj_pickup_token") || "";
+    var username = localStorage.getItem("nvj_pickup_user") || "";
+    var pollTimer = null;
+    var POLL_MS = 3000;
+
+    function $(id) { return document.getElementById(id); }
+
+    var toastT = null;
+    function toast(msg) {
+      var el = $("toast");
+      el.textContent = msg;
+      el.classList.add("show");
+      clearTimeout(toastT);
+      toastT = setTimeout(function () { el.classList.remove("show"); }, 2800);
+    }
+
+    function fmtTask(st) {
+      st = st || "";
+      return TASK_CN[st] ? st + "（" + TASK_CN[st] + "）" : st || "—";
+    }
+    function fmtRobot(st) {
+      st = st || "";
+      return ROBOT_CN[st] ? st + "（" + ROBOT_CN[st] + "）" : st || "—";
+    }
+
+    async function api(method, path, body, auth) {
+      var opt = { method: method, headers: { Accept: "application/json" } };
+      if (auth && token) opt.headers.Authorization = "Bearer " + token;
+      if (body !== undefined) {
+        opt.headers["Content-Type"] = "application/json";
+        opt.body = JSON.stringify(body);
+      }
+      var r = await fetch(API + path, opt);
+      var data = {};
+      try { data = await r.json(); } catch (e) {}
+      if (!r.ok) {
+        var d = data.detail;
+        throw new Error(typeof d === "string" ? d : (d ? JSON.stringify(d) : r.statusText));
+      }
+      return data;
+    }
+
+    function updateSessionUi() {
+      var el = $("sessLabel");
+      if (token) {
+        el.textContent = "已登录：" + (username || "用户");
+        el.className = "sess ok";
+      } else {
+        el.textContent = "未登录";
+        el.className = "sess no";
+      }
+      $("apiMeta").textContent = API.replace(/^https?:\/\//, "");
+      $("inApi").value = API;
+    }
+
+    function selectTab(name) {
+      document.querySelectorAll(".panel").forEach(function (p) {
+        p.classList.toggle("active", p.id === "panel-" + name);
+      });
+      document.querySelectorAll(".nav-item").forEach(function (b) {
+        b.classList.toggle("active", b.getAttribute("data-tab") === name);
+      });
+    }
+
+    function renderTasks(tasks) {
+      if (!token) {
+        $("taskList").textContent = "请先登录";
+        $("stTasks").textContent = "—";
+        return;
+      }
+      tasks = tasks || [];
+      $("stTasks").textContent = String(tasks.length);
+      if (!tasks.length) {
+        $("taskList").textContent = "暂无进行中的任务";
+        return;
+      }
+      $("taskList").textContent = tasks.map(function (t, i) {
+        return (i + 1) + ". " + (t.id || "") +
+          "\n   门牌 " + (t.door_plate || "—") +
+          " · 投件码 " + (t.match_key || "—") +
+          " · " + fmtTask(t.status);
+      }).join("\n\n");
+      if (!$("inTask").value.trim() && tasks[0] && tasks[0].id) {
+        $("inTask").value = tasks[0].id;
+      }
+    }
+
+    async function refreshAll() {
+      try {
+        var robot = await api("GET", "/api/robot/state", undefined, false);
+        $("stRobot").textContent = fmtRobot(robot.robot_state);
+        $("apiMeta").textContent = API.replace(/^https?:\/\//, "");
+      } catch (e) {
+        $("stRobot").textContent = "离线";
+        $("apiMeta").textContent = "离线";
+      }
+      if (!token) {
+        renderTasks([]);
+        return;
+      }
+      try {
+        var res = await Promise.all([
+          api("GET", "/api/user/tasks", undefined, true),
+          api("GET", "/api/robot/state", undefined, false)
+        ]);
+        renderTasks(res[0].tasks || []);
+        $("stRobot").textContent = fmtRobot((res[1] || {}).robot_state);
+      } catch (e) {
+        if (String(e.message).indexOf("未登录") >= 0 || String(e.message).indexOf("401") >= 0) {
+          token = "";
+          localStorage.removeItem("nvj_pickup_token");
+          updateSessionUi();
+        }
+        toast(e.message);
+      }
+    }
+
+    document.querySelectorAll(".nav-item").forEach(function (btn) {
+      btn.onclick = function () {
+        selectTab(btn.getAttribute("data-tab"));
+        refreshAll();
+      };
+    });
+
+    $("btnRefreshHome").onclick = refreshAll;
+    $("btnRefreshTasks").onclick = refreshAll;
+
+    $("btnSaveApi").onclick = function () {
+      API = ($("inApi").value || location.origin).trim().replace(/\/$/, "");
+      localStorage.setItem("nvj_pickup_api", API);
+      updateSessionUi();
+      toast("API 已保存");
+      refreshAll();
+    };
+
+    $("btnRegister").onclick = async function () {
+      var u = $("inUser").value.trim();
+      var p = $("inPw").value;
+      if (!u || !p) return toast("请填写用户名和密码");
+      try {
+        var data = await api("POST", "/api/auth/register", { username: u, login_password: p }, false);
+        token = data.token || "";
+        username = data.username || u;
+        localStorage.setItem("nvj_pickup_token", token);
+        localStorage.setItem("nvj_pickup_user", username);
+        updateSessionUi();
+        toast("注册成功");
+        await refreshAll();
+        selectTab("tasks");
+      } catch (e) { toast(e.message); }
+    };
+
+    $("btnLogin").onclick = async function () {
+      var u = $("inUser").value.trim();
+      var p = $("inPw").value;
+      if (!u || !p) return toast("请填写用户名和密码");
+      try {
+        var data = await api("POST", "/api/auth/login", { username: u, login_password: p }, false);
+        token = data.token || "";
+        username = data.username || u;
+        localStorage.setItem("nvj_pickup_token", token);
+        localStorage.setItem("nvj_pickup_user", username);
+        updateSessionUi();
+        toast("登录成功");
+        await refreshAll();
+        selectTab("tasks");
+      } catch (e) { toast(e.message); }
+    };
+
+    $("btnLogout").onclick = function () {
+      token = "";
+      username = "";
+      localStorage.removeItem("nvj_pickup_token");
+      localStorage.removeItem("nvj_pickup_user");
+      updateSessionUi();
+      renderTasks([]);
+      toast("已退出");
+    };
+
+    $("btnPickup").onclick = async function () {
+      if (!token) return toast("请先在「我的」登录");
+      var door = $("inDoor").value.trim();
+      if (!door) return toast("请填写门牌号");
+      try {
+        var data = await api("POST", "/api/pickup/request", { door_plate: door }, true);
+        var code = data.dropoff_code || "";
+        toast(code ? ("已提交 · 投件码 " + code) : (data.message || "已提交"));
+        if (data.task_id) $("inTask").value = data.task_id;
+        await refreshAll();
+      } catch (e) { toast(e.message); }
+    };
+
+    $("btnVerify").onclick = async function () {
+      if (!token) return toast("请先在「我的」登录");
+      var tid = $("inTask").value.trim();
+      var pw = $("inPickPw").value;
+      if (!tid || !pw) return toast("请填写任务 ID 与密码");
+      try {
+        var data = await api("POST", "/api/pickup/verify", { task_id: tid, login_password: pw }, true);
+        toast(data.message || "取货成功");
+        $("inPickPw").value = "";
+        await refreshAll();
+      } catch (e) { toast(e.message); }
+    };
+
+    var brandEl = $("brandIcon");
+    if (brandEl && window.UI_ASSET) brandEl.src = UI_ASSET("无字图标.png");
+
+    updateSessionUi();
+    refreshAll();
+    pollTimer = setInterval(refreshAll, POLL_MS);
+    window.addEventListener("pagehide", function () { clearInterval(pollTimer); });
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,52 @@
+{
+  "floor": "",
+  "map_yaml": "H2.yaml",
+  "map_pgm": "H2.pgm",
+  "generation": "manual",
+  "coverage_mode": "full_free",
+  "coverage_ratio": 0.0397,
+  "reachable_cells": 1991,
+  "reachable_area_m2": 4.98,
+  "coverage_stats": {
+    "must_coverage_ratio": 0.0397,
+    "optional_coverage_ratio": 1.0,
+    "must_uncovered_cells": 1912,
+    "optional_uncovered_cells": 0,
+    "total_must_cells": 1991,
+    "total_optional_cells": 0,
+    "patrol_point_count": 0
+  },
+  "anchor": {
+    "index": 0,
+    "kind": "anchor",
+    "label": "initial_pose",
+    "id": "yaml_entry",
+    "x": 0.025,
+    "y": -0.075,
+    "yaw": -0.5665,
+    "grid_col": 200,
+    "grid_row": 185,
+    "source": "yaml:initial_pose"
+  },
+  "waypoints": [
+    {
+      "index": 0,
+      "kind": "anchor",
+      "label": "initial_pose",
+      "id": "yaml_entry",
+      "x": 0.025,
+      "y": -0.075,
+      "yaw": -0.5665,
+      "grid_col": 200,
+      "grid_row": 185,
+      "source": "yaml:initial_pose"
+    }
+  ],
+  "route_order": [
+    0,
+    0
+  ],
+  "route_length_m": 0.0,
+  "generated_at": "2026-06-30T07:29:15Z",
+  "tool_version": "0.1.0"
+}

@@ -1,0 +1,186 @@
+
+============================================================
+FILE: 01_安装环境.pdf
+============================================================
+
+--- page 1 ---
+前置说明  
+准备工作  
+在  rockpi ： Linux 中  解压  ai_app.zip 文件
+配置环境  
+本次训练模型需要配置两个环境：
+LlamaFactory: 用于训练大模型
+RKLLM: 用于转换训练好的大模型
+创建 python 环境  
+新开终端
+安装 miniconda ，一直 yes 就好
+创建  LlamaFactory 环境
+创建  RKLLM 环境
+# 首先开发环境包括虚拟机下的 Ubuntu20.04 系统（ x86_64 ）以及 rockpi 5b 的 Ubuntu20.04 系统
+（ ARM ）；为避免用户混淆概念，我们在指令前缀添加系统标识用以区分
+# windows 下安装的虚拟机中的 Ubuntu20.04 系统（ x86_64 ）
+Linux $ ...
+# rockpi 5b 下的 Ubuntu20.04 系统（ ARM ）
+rock $ ...
+# 进入小车
+rock $ cd ~/Desktop
+rock $ unzip ai_app.zip
+Linux $ wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-
+x86_64.sh
+Linux $ bash ~/Miniconda3-latest-Linux-x86_64.sh
+Linux $ conda create -n LlamaFactory python=3.11
+Linux $ conda create -n rkllm_310 python=3.10
+--- page 2 ---
+LlamaFactory  
+新开终端
+RKLLM  
+新开终端
+执行以下命令没有报错，则安装成功
+Linux $ conda activate LlamaFactory
+Linux $ git clone --depth 1 https://github.com/hiyouga/LlamaFactory.git
+Linux $ cd LlamaFactory
+Linux $ pip install -e .
+Linux $ pip install -r requirements/metrics.txt -r requirements/deepspeed.txt
+Linux $ conda activate rkllm_310
+Linux $ git clone -b release-v1.1.4 https://github.com/airockchip/rknn-llm.git
+Linux $ cd rknn-llm/rkllm-toolkit/packages
+Linux $ pip install rkllm_toolkit-1.2.3-cp312-cp312-linux_x86_64.whl
+Linux $ python3
+Linux $ from rkllm.api import RKLLM
+============================================================
+FILE: 02_训练并转换模型.pdf
+============================================================
+
+--- page 1 ---
+大模型训练  
+前置说明  
+准备工作  
+有条件的老师可以使用自己的电脑训练，没有的话可以使用下面推荐的云服务器网站
+部分运行的代码都在  code.zip （文件位于  ../../sdk/code.zip ）中，需要解压到  Linux 系统（windows
+下安装的虚拟机中的 Ubuntu20.04 系统）中的任意位置 
+训练网站 ryi  
+https://passport.compshare.cn/
+实名会送 5 元额度，可以使用 3 小时的 4090 ，足够本次培训训练时间。
+数据集  
+数据集格式  
+参考 Octopus v2 ，数据集格式为：
+# 首先开发环境包括虚拟机下的 Ubuntu20.04 系统（ x86_64 ）以及 rockpi 5b 的 Ubuntu20.04 系统
+（ ARM ）；为避免用户混淆概念，我们在指令前缀添加系统标识用以区分
+# windows 下安装的虚拟机中的 Ubuntu20.04 系统（ x86_64 ）
+Linux $ ...
+# rockpi 5b 下的 Ubuntu20.04 系统（ ARM ）
+rock $ ...
+--- page 2 ---
+其中 <rtt_*> 是特殊 token ，用于替换函数名和提前终止模型输出
+生成数据集  
+生成数据集建议使用打模型 api 创建，可以使用优云智算的 api ，也可以使用其他平台的 api ，这里是为了
+方便和使用免费的 5 块钱额度。
+创建 key  
+进入 key 创建页面  https://console.compshare.cn/light-gpu/api-keys
+我们使用的是 ds 模型
+测试脚本如下：
+下面是用户的查询，请选择正确的函数并生成参数来调用函数。
+查询 : {query}
+Response:<rtt_i>(param1, param2, ...);<rtt_j>(param1, param2, ...)<rtt_end>
+函数描述 : {function_description}
+Linux $ /path/to/code
+Linux $ python test_api.py
+--- page 3 ---
+创建数据集指令  
+代码会中运行目录下保存生成的指令 -car_instructions.txt
+接下来需要人工去掉  - 。，确保开头没有 -
+生成函数调用  
+上一步只是生成小车运行指令，还需要生成指令对应的函数调用
+生成的函数有可能出现不规范的情况，需要人工检查
+替换函数名称  
+训练  
+运行下面的命令启动 llamafactory 网页，进行可视化微调
+Linux $ cd /path/to/code
+Linux $ python batch_generate_car_instructions.py
+Linux $ cd /path/to/code
+Linux $ python generate_dataset.py
+Linux $ cd /path/to/code
+Linux $ python replace_function_tokens.py --output 
+function_call_dataset_tokens.json
+Linux $ cd /path/to/llamafactory
+Linux $ llamafactory-cli webui
+--- page 4 ---
+添加函数名为特殊 token  
+https://www.modelscope.cn/models/Qwen/Qwen3-1.7B
+本次微调的模型是 qwen3-1.7B
+Octopus v2 另外一个关键点就是将函数名作为特殊 token
+主要注意：
+model_name ：原模型路径
+save_path ：保存模型路径
+训练启动  
+Linux $ cd /path/to/code
+Linux $ python add_special_tokens.py
+--- page 5 ---
+这是重点，参数不能选错
+额外模块参数： embed_tokens,lm_head
+导出  
+注意： 导出之后，需要将合并模型的 config.json 的 tie_word_embeddings 改为 false 才能正常推理
+来源：https://github.com/hiyouga/LLaMA-Factory/issues/4913
+测试微调后的大模型  
+Linux $ cd /path/to/code
+Linux $ python chat.py
+--- page 6 ---
+转换模型  
+进入环境  
+生成量化数据  
+转换  
+复制到开发板上  
+Linux $ conda activate rkllm_310
+Linux $ cd /workspace/RKSDK/rknn-llm-release-
+v1.2.3/examples/rkllm_api_demo/export
+Linux $ python generate_data_quant.py -m /workspace/train_model/
+Linux $ python export_rkllm.py
+Linux $ scp {your_llm}.rkllm 
+rock@ip:~/Desktop/ai_app/RKSDK/test_rkllm_run/models/
+--- page 7 ---
+ 
+============================================================
+FILE: 03_如何控制小车.pdf
+============================================================
+
+--- page 1 ---
+大模型控制小车  
+前置说明  
+准备工作  
+复制脚本到指定目录
+启动 ros  
+终端 1  
+终端 2  
+进入  RT-Thread shell 后执行：
+启动大模型服务  
+# 首先开发环境包括虚拟机下的 Ubuntu20.04 系统（ x86_64 ）以及 rockpi 5b 的 Ubuntu20.04 系统
+（ ARM ）；为避免用户混淆概念，我们在指令前缀添加系统标识用以区分
+# windows 下安装的虚拟机中的 Ubuntu20.04 系统（ x86_64 ）
+Linux $ ...
+# rockpi 5b 下的 Ubuntu20.04 系统（ ARM ）
+rock $ ...
+rock $ cd ~/Desktop/ai_app/RKSDK
+rock $ cp car_cmd.sh ~/Desktop/rock_ws/ros_ws/
+rock $ cp car_cmd_daemon.py ~/Desktop/rock_ws/ros_ws/
+rock $ cd ~/Desktop/rock_ws/microros_ws
+rock $ source install/setup.bash
+rock $ ros2 run micro_ros_agent micro_ros_agent udp4 --port 8888
+# 若  /dev/rt_shell 不存在，先跑一次（会创建软链接）
+rock $ bash ~/Desktop/rock_ws/ros_ws/usb_auto_setup.sh
+rock $ minicom -D /dev/rt_shell -b 1500000
+rock $ microros_chassis udp 10.10.10.31 8888
+rock $ chassis_car_app
+--- page 2 ---
+终端 3  
+终端 4  
+aichat.py 可实现对话控制大模型移动，并且可自由修改小车移动的线速度和角速度。
+当前默认的距离和角度换算为：
+    - 前进 / 后退  1 米对应  1 秒 
+    - 左 / 右转  90 度对应  4 秒
+ 
+rock $ cd ~/Desktop/ai_app/RKSDK/test_rkllm_run
+rock $ source ../.venv/bin/activate
+rock $ python flask_server.py
+rock $ cd ~/Desktop/ai_app/RKSDK/test_rkllm_run
+rock $ source ../.venv/bin/activate
+rock $ python aichat.py  --yes

@@ -1,0 +1,50 @@
+{
+  "generated_at": "2026-06-30T07:35:39Z",
+  "tool_version": "0.1.0",
+  "mode": "single",
+  "switcher_path": "D:\\cd\\NovaJoy\\002-630\\Desktop\\ros_ws\\src\\smart_nav_manager\\smart_nav_manager\\switcher_node.py",
+  "map_dir": "D:\\cd\\NovaJoy\\002-630\\Desktop\\ros_ws\\install\\rt_robot_nav2\\share\\rt_robot_nav2\\map",
+  "floor_maps": {
+    "1F": "my_map5.yaml",
+    "2F": "my_map5.yaml"
+  },
+  "floor_order": [
+    "1F",
+    "2F"
+  ],
+  "anchors": {
+    "H2": "yaml:initial_pose"
+  },
+  "params": {
+    "generation": "manual",
+    "coverage_mode": "full_free",
+    "max_uncovered_ratio": null,
+    "sample_step_m": 0.25,
+    "inflate_m": 0.3,
+    "spin_360": true,
+    "manual_point_keys": [
+      "H2"
+    ]
+  },
+  "maps": {
+    "H2.yaml": "98aa6a23cbc5803e283329070c2fcbabece927b20f5183e8f62b669e3cc84e85",
+    "H2.pgm": "b08c2947b3a1ef440427bd551676b251dca860c7a65f4bfbd177fff25ec00851"
+  },
+  "plans_summary": [
+    {
+      "floor": "",
+      "map_yaml": "H2.yaml",
+      "coverage_ratio": 0.0397,
+      "waypoint_count": 1,
+      "route_length_m": 0.0
+    }
+  ],
+  "warnings": [
+    "FLOOR_MAPS 中多张楼层指向同一地图: ['my_map5.yaml']；全楼模式会对同图重复规划",
+    "单图且不在 FLOOR_MAPS：使用 yaml initial_pose 作锚点",
+    "已剔除与锚点不连通的游离可通行格 115884 个（仅保留主封闭区域）",
+    "忽略不可达手动点 (120,130)",
+    "忽略不可达手动点 (140,125)",
+    "未标记转圈点：将只生成锚点路线（无额外停靠转圈）"
+  ]
+}

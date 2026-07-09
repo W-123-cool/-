@@ -1,0 +1,5 @@
+{
+  "patrol_track_enabled": false,
+  "guard_view_track_enabled": false,
+  "detection_conf": 0.6
+}

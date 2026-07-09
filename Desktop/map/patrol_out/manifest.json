@@ -1,0 +1,43 @@
+{
+  "generated_at": "2026-07-07T06:50:16Z",
+  "tool_version": "0.1.0",
+  "mode": "single",
+  "switcher_path": "E:\\New folder1\\002-701\\002-701\\Desktop\\ros_ws\\src\\smart_nav_manager\\smart_nav_manager\\switcher_node.py",
+  "map_dir": "E:\\New folder1\\002-701\\002-701\\Desktop\\ros_ws\\install\\rt_robot_nav2\\share\\rt_robot_nav2\\map",
+  "floor_maps": {
+    "1F": "my_map6.yaml",
+    "2F": "my_map8.yaml"
+  },
+  "floor_order": [
+    "1F",
+    "2F"
+  ],
+  "anchors": {
+    "1F": "room:100"
+  },
+  "params": {
+    "generation": "auto",
+    "coverage_mode": "full_free",
+    "max_uncovered_ratio": null,
+    "sample_step_m": 0.25,
+    "inflate_m": 0.3,
+    "spin_360": true,
+    "manual_point_keys": []
+  },
+  "maps": {
+    "my_map6.yaml": "de7b8cb7e235e611727639f26dc73ee4769bd1688550a29fc88077bdf272deca",
+    "my_map6.pgm": "f4b172c586200195633fe68fac4694d90b4e992ec558a307bdbe62a9f4df791d"
+  },
+  "plans_summary": [
+    {
+      "floor": "1F",
+      "map_yaml": "my_map6.yaml",
+      "coverage_ratio": 1.0,
+      "waypoint_count": 14,
+      "route_length_m": 28.17
+    }
+  ],
+  "warnings": [
+    "已剔除与锚点不连通的游离可通行格 187656 个（仅保留主封闭区域）"
+  ]
+}

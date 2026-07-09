@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>YOLO11 人员检测告警系统</title>
+  <style>
+    body { font-family: Arial, sans-serif; background:#111; color:#eee; margin:0; padding:16px; }
+    .wrap { max-width: 1200px; margin: 0 auto; }
+    .title { font-size: 24px; margin-bottom: 12px; }
+    .status { padding:10px 14px; border-radius:8px; margin-bottom:12px; font-weight:700; }
+    .ok { background:#1f3; color:#111; }
+    .warn { background:#f33; color:#fff; }
+    .card { background:#222; border-radius:10px; padding:12px; margin-bottom:16px; }
+    .video { width:100%; max-width:1000px; border-radius:8px; background:#000; }
+    table { width:100%; border-collapse:collapse; font-size:14px; }
+    th, td { border-bottom:1px solid #333; padding:10px 8px; text-align:left; }
+    th { color:#bbb; }
+    a { color:#7db9ff; text-decoration:none; }
+    .toolbar { display:flex; gap:8px; margin:8px 0 12px; flex-wrap:wrap; }
+    button { padding:8px 12px; border:0; border-radius:6px; cursor:pointer; }
+    .btn { background:#3578e5; color:#fff; }
+    .btn-danger { background:#d9534f; color:#fff; }
+    .pager { margin-top:10px; display:flex; gap:8px; align-items:center; }
+    .muted { color:#aaa; font-size:13px; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="title">YOLO11 人员检测告警系统（仅 person）</div>
+  <div id="status" class="status ok">状态：未检测到人员</div>
+
+  <div class="card">
+    <h3>实时摄像头画面</h3>
+    <img class="video" src="/video_feed" alt="video feed"/>
+    <div class="muted" style="margin-top:8px;">检测到人时：红色告警 + 每分钟最多抓拍1次</div>
+  </div>
+
+  <div class="card">
+    <h3>抓拍历史记录</h3>
+    <div class="toolbar">
+      <button class="btn" onclick="exportCsv()">导出CSV</button>
+      <button class="btn-danger" onclick="clearAll()">清空全部抓拍</button>
+    </div>
+    <table>
+      <thead>
+      <tr>
+        <th>序号</th>
+        <th>抓拍时间</th>
+        <th>文件名</th>
+        <th>查看</th>
+        <th>操作</th>
+      </tr>
+      </thead>
+      <tbody id="historyBody"><tr><td colspan="5">暂无记录</td></tr></tbody>
+    </table>
+    <div class="pager">
+      <button class="btn" onclick="prevPage()">上一页</button>
+      <button class="btn" onclick="nextPage()">下一页</button>
+      <span id="pageInfo" class="muted">第 1 页</span>
+    </div>
+  </div>
+</div>
+
+<script>
+let audioCtx = null;
+let beepTimer = null;
+let page = 1;
+const pageSize = 10;
+let totalPages = 1;
+
+function beepOnce() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = "sine";
+  osc.frequency.value = 880;
+  gain.gain.value = 0.06;
+  osc.connect(gain); gain.connect(audioCtx.destination);
+  osc.start(); setTimeout(() => osc.stop(), 160);
+}
+function startBeep(){ if (!beepTimer){ beepOnce(); beepTimer=setInterval(beepOnce,1000);} }
+function stopBeep(){ if (beepTimer){ clearInterval(beepTimer); beepTimer=null; } }
+
+async function refreshStatus() {
+  const r = await fetch('/api/status?_=' + Date.now());
+  const s = await r.json();
+  const el = document.getElementById('status');
+  if (s.warning_active) {
+    el.className = 'status warn';
+    el.textContent = '状态：⚠ 检测到人员，请注意！';
+    startBeep();
+  } else {
+    el.className = 'status ok';
+    el.textContent = '状态：未检测到人员';
+    stopBeep();
+  }
+}
+
+async function loadHistory() {
+  const r = await fetch(`/api/captures?page=${page}&page_size=${pageSize}&_=${Date.now()}`);
+  const d = await r.json();
+  totalPages = d.total_pages || 1;
+  const body = document.getElementById('historyBody');
+  const items = d.items || [];
+
+  if (!items.length) {
+    body.innerHTML = '<tr><td colspan="5">暂无记录</td></tr>';
+  } else {
+    body.innerHTML = items.map((it, idx) => `
+      <tr>
+        <td>${(d.page - 1) * d.page_size + idx + 1}</td>
+        <td>${it.time_str}</td>
+        <td>${it.file}</td>
+        <td><a href="${it.url}" target="_blank">查看图片</a></td>
+        <td><button class="btn-danger" onclick="deleteOne('${it.file}')">删除</button></td>
+      </tr>
+    `).join('');
+  }
+  document.getElementById('pageInfo').textContent = `第 ${d.page} / ${totalPages} 页，共 ${d.total} 条`;
+}
+
+async function deleteOne(file){
+  if (!confirm(`确认删除 ${file} ?`)) return;
+  const r = await fetch('/api/captures/delete', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({file})
+  });
+  const d = await r.json();
+  if (!d.ok) { alert('删除失败: ' + (d.msg || 'unknown')); return; }
+  await loadHistory();
+}
+
+async function clearAll(){
+  if (!confirm('确认清空所有抓拍图片？')) return;
+  const r = await fetch('/api/captures/clear', {method:'POST'});
+  const d = await r.json();
+  if (!d.ok) { alert('清空失败'); return; }
+  page = 1;
+  await loadHistory();
+}
+
+async function exportCsv(){
+  const r = await fetch('/api/captures/export_csv');
+  const d = await r.json();
+  if (!d.ok) { alert('导出失败'); return; }
+  window.open(d.url, '_blank');
+}
+
+function prevPage(){ if (page > 1){ page--; loadHistory(); } }
+function nextPage(){ if (page < totalPages){ page++; loadHistory(); } }
+
+async function tick(){
+  try {
+    await refreshStatus();
+    await loadHistory();
+  } catch(e) {
+    console.error(e);
+  }
+}
+setInterval(tick, 1000);
+tick();
+</script>
+</body>
+</html>
